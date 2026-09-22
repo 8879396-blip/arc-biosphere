@@ -1,0 +1,29 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check (all ESM sources)
+        run: |
+          fail=0
+          for f in $(find src tools client -name '*.js' | sort); do
+            node --input-type=module -e "await import('file://$PWD/'+'$f')" >/dev/null 2>&1 \
+              || node --check "$f" >/dev/null 2>&1 \
+              || { echo "SYNTAX FAIL $f"; fail=1; }
+          done
+          exit $fail
+      - name: keccak-256 test vectors
+        run: node test-keccak.js
+      - name: Determinism + on-chain replay proof
+        run: node test-replay.mjs
+      - name: Engine scenarios
+        run: node test-scenarios.js

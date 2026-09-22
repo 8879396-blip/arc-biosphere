@@ -3,6 +3,7 @@
 //   node tools/replay.js --to-tick 5000
 //   node tools/replay.js --genesis .data-bio/genesis.json --inputs .data-bio/inputs.jsonl --to-tick 5000 --chain 0x<registry> --net mainnet
 import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { createBiosphere, step, creditExternalCall, populationRoot, honesty, migrateCounters } from '../src/life.js';
 import { readGenesis, loadInputs } from '../src/recorder.js';
 import { rpc, selector } from './arc.js';
@@ -16,7 +17,7 @@ const chain = arg('chain', null);
 const net = arg('net', 'mainnet');
 const json = has('json');
 
-function applyInput(bio, e) {
+function applyInput(bio, e, onWarn) {
   switch (e.kind) {
     case 'credit':
       creditExternalCall(bio, e.niche, { revenue: e.revenue || 0, calls: e.calls || 1, buyer: e.buyer || null, txHash: e.txHash || null, subsidized: !!e.subsidized });
@@ -33,7 +34,7 @@ function applyInput(bio, e) {
       if (e.set && typeof e.set === 'object') for (const [k, v] of Object.entries(e.set)) if (k in bio.econ) bio.econ[k] = v;
       break;
     case 'extinct': case 'shock': case 'note': break;   // 内部 RNG 决定，无需重放
-    default: console.error('  [warn] 未知输入类型 ' + e.kind + ' @tick ' + e.atTick);
+    default: if (onWarn) onWarn('未知输入类型 ' + e.kind + ' @tick ' + e.atTick); else console.error('  [warn] 未知输入类型 ' + e.kind + ' @tick ' + e.atTick);
   }
 }
 
@@ -51,34 +52,39 @@ async function readChainCommits(registry, last = 60) {
   return { commitCount: cnt.toString(), commits: out };
 }
 
-(async () => {
-  const g = readGenesis(genesisFile || undefined);
-  const inputs = loadInputs(inputsFile || undefined);
-  if (!json) console.log(`== replay ==\n   genesis: seed=${g.seed.slice(0, 18)}… founders=${g.founders} version=${g.version}\n   inputs : ${inputs.length} 条外部输入\n   target : tick ${toTick}`);
-
+/** 核心：从创世 + 输入日志重放到指定 tick，返回 root 与诚实账本。CI 与 CLI 共用。 */
+export function replayTo(g, inputs, toTick, onWarn) {
   const bio = createBiosphere({ seed: g.seed, name: g.name, founders: g.founders, tickLabel: g.tickLabel });
   if (g.econ) Object.assign(bio.econ, g.econ);
   migrateCounters(bio);
-
   const byTick = new Map();
   for (const e of inputs) { if (!byTick.has(e.atTick)) byTick.set(e.atTick, []); byTick.get(e.atTick).push(e); }
-
   const t0 = Date.now();
   let applied = 0;
   while (bio.meta.tick < toTick) {
     const list = byTick.get(bio.meta.tick);
-    if (list) { for (const e of list) { applyInput(bio, e); applied++; } }
+    if (list) for (const e of list) { try { applyInput(bio, e, onWarn); applied++; } catch (err) { if (onWarn) onWarn('input failed @' + e.atTick + ': ' + err.message); } }
     if (bio.organisms.size === 0) break;
     step(bio, 1);
   }
-  const ms = Date.now() - t0;
-  const root = populationRoot(bio);
-  const h = honesty(bio);
+  return { tick: bio.meta.tick, alive: bio.organisms.size, generations: bio.counters.generations, populationRoot: populationRoot(bio), inputsApplied: applied, replayMs: Date.now() - t0, honesty: honesty(bio), bio };
+}
+
+const isCli = !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (!isCli) { /* imported as a module: do nothing */ } else (async () => {
+  const g = readGenesis(genesisFile || undefined);
+  const inputs = loadInputs(inputsFile || undefined);
+  if (!json) console.log(`== replay ==\n   genesis: seed=${g.seed.slice(0, 18)}… founders=${g.founders} version=${g.version}\n   inputs : ${inputs.length} 条外部输入\n   target : tick ${toTick}`);
+
+  const r = replayTo(g, inputs, toTick, (m) => console.error('  [warn] ' + m));
+  const root = r.populationRoot;
+  const h = r.honesty;
   const result = {
-    tick: bio.meta.tick, alive: bio.organisms.size, generations: bio.counters.generations,
-    populationRoot: root, inputsApplied: applied, replayMs: ms,
+    tick: r.tick, alive: r.alive, generations: r.generations,
+    populationRoot: root, inputsApplied: r.inputsApplied, replayMs: r.replayMs,
     honesty: h,
   };
+  const ms = r.replayMs;
 
   if (chain) {
     const { commitCount, commits } = await readChainCommits(chain);
@@ -93,7 +99,7 @@ async function readChainCommits(registry, last = 60) {
   }
   if (json) console.log(JSON.stringify(result, null, 2));
   else {
-    console.log(`\n   重放完成：tick=${result.tick} alive=${result.alive} gen=${result.generations} 用时 ${ms}ms，应用外部输入 ${applied} 条`);
+    console.log(`\n   重放完成：tick=${result.tick} alive=${result.alive} gen=${result.generations} 用时 ${r.replayMs}ms，应用外部输入 ${r.inputsApplied} 条`);
     console.log(`   populationRoot = ${root}`);
     console.log(`   honesty: real=$${h.realRevenueUSDC} subsidy=$${h.subsidyUSDC} ratio=${h.realRevenueRatioBps}bps 模拟需求占比=${h.simulatedDemandShareBps}bps`);
     if (result.chain) {
