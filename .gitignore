@@ -1,0 +1,15 @@
+node_modules/
+.data*/
+*.log
+server*.err
+.env
+.env.*
+!.env.example
+sample-map.png
+
+# 运行时状态与密钥（绝不入库）
+.data*/
+*.tmp
+deployments.*.json
+.env
+

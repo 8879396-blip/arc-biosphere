@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arc Biosphere · 自主生命经济体</title>
+<style>
+:root{--bg:#080b09;--panel:#0d130f;--line:#1e2b20;--fg:#dfe7e0;--mut:#7d8b7d;--ok:#7ee08a;--warn:#ffd479;--bad:#ff8f8f;--acc:#8be9fd}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:22px 22px 60px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:14px}
+h1{font-size:20px;margin:0}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#9fd7a8;margin:0 0 8px}
+.sub{color:var(--mut);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-top:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dotted #18231a}
+.kv:last-child{border:0}.kv b{font-weight:600}
+.big{font-size:26px;line-height:1.1}
+.pill{display:inline-block;padding:1px 9px;border:1px solid #2b3d2c;border-radius:99px;font-size:12px}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.mut{color:var(--mut)}
+.bar{height:8px;background:#131c15;border-radius:99px;overflow:hidden;margin:6px 0 2px}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#2f7d4f,#7ee08a)}
+.bar.warnbar>i{background:linear-gradient(90deg,#7d5f2f,#ffd479)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}th{color:#9fd7a8;font-weight:600}
+code{background:#111a13;padding:1px 5px;border-radius:3px;font-size:12.5px}
+pre{background:#0a100c;border:1px solid var(--line);border-radius:6px;padding:10px;overflow:auto;font-size:12.5px}
+.dot{width:8px;height:8px;border-radius:99px;background:var(--ok);display:inline-block;margin-right:6px;animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.35}}
+footer{margin-top:22px;color:var(--mut);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+svg{width:100%;height:120px;display:block}
+#err{display:none;background:#2a1414;border:1px solid #5a2b2b;color:#ffb4b4;padding:10px;border-radius:6px;margin-top:12px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1><span class="dot" id="dot"></span><span id="name">Arc Biosphere</span></h1>
+    <div class="sub">自主进化 · 自主繁衍 · 自主运营的生命经济体 —— fitness is solvency（活着就是适应度）</div>
+  </div>
+  <div class="sub" style="margin-left:auto;text-align:right">
+    <div>tick <b id="tick">—</b> · 存活 <b id="alive">—</b> · 世代 <b id="gen">—</b></div>
+    <div id="updated">加载中…</div>
+  </div>
+</header>
+<div id="err"></div>
+
+<div class="grid">
+  <div class="card">
+    <h2>链上证明 · BiosphereRegistry</h2>
+    <div class="kv"><span class="mut">状态</span><b id="c-live">—</b></div>
+    <div class="kv"><span class="mut">commitCount</span><b id="c-count">—</b></div>
+    <div class="kv"><span class="mut">距上次提交</span><b id="c-ago">—</b></div>
+    <div class="kv"><span class="mut">链上 realRevenueRatio</span><b id="c-ratio">—</b></div>
+    <div class="kv"><span class="mut">root 一致性</span><b id="c-match">—</b></div>
+    <div class="kv"><span class="mut">链上最新 root</span><b id="c-root" style="font-size:11px">—</b></div>
+    <div class="kv"><span class="mut">服务器当前 root</span><b id="l-root" style="font-size:11px">—</b></div>
+    <div class="sub" id="c-links" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h2>诚实账本 · 钱从哪来</h2>
+    <div class="kv"><span class="mut">真实第三方 x402 收入</span><b class="ok" id="h-real">—</b></div>
+    <div class="kv"><span class="mut">运营方补贴</span><b class="warn" id="h-sub">—</b></div>
+    <div class="kv"><span class="mut">realRevenueRatio</span><b id="h-ratio">—</b></div>
+    <div class="bar"><i id="h-ratio-bar" style="width:0%"></i></div>
+    <div class="kv"><span class="mut">模拟基线需求占比</span><b id="h-sim">—</b></div>
+    <div class="bar warnbar"><i id="h-sim-bar" style="width:0%"></i></div>
+    <div class="sub" style="margin-top:8px">补贴池每日上限 = <code>baseCap × (1 − ratio)²</code>，ratio 到 100% 自动归零；
+    领取必须附带链上最新 <code>populationRoot</code>，过期直接 revert。</div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1">
+    <h2>种群与演化</h2>
+    <div id="chart"></div>
+    <div class="sub" id="chart-legend">— 种群数量 · — 平均突变率（环境稳定时下降、剧烈波动时上升，是演化出来的，不是写死的）</div>
+  </div>
+
+  <div class="card">
+    <h2>生态位（市场出清结果）</h2>
+    <table><thead><tr><th>niche</th><th>种群</th><th>需求</th><th>价格指数</th><th>冲击</th></tr></thead><tbody id="niches"></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>x402 服务（真实可买）</h2>
+    <table><thead><tr><th>路由</th><th>价格 USDC</th><th>计价</th></tr></thead><tbody id="prices"></tbody></table>
+    <div class="sub" style="margin-top:8px">买入即把 USDC 变成胜出个体的 energy → 你的消费直接改变基因库。</div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1">
+    <h2>自己验（确定性重放）</h2>
+    <pre id="replay">node tools/replay.js --to-tick …</pre>
+    <div class="sub">重放出的 <code>populationRoot</code> 与链上承诺逐字节相同 = 运营方没有偷偷改种群。
+    创世参数见 <code>genesis.json</code>，全部外部输入见 <code>inputs.jsonl</code>（已记录 <b id="inputs">—</b> 条）。</div>
+  </div>
+</div>
+
+<footer>
+  <div id="contracts"></div>
+  <div>数据源：<code>/api/bio/public</code>（每 5 秒刷新）· 链上 <code>rpc.mainnet.arc.io</code> · 对比页 <a href="/verify">/verify</a> · 机器可读 <a href="/llms-full.txt">/llms-full.txt</a> · <a href="/openapi.yaml">/openapi.yaml</a></div>
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (n, d = 2) => (n == null ? '—' : Number(n).toFixed(d));
+function err(msg){ const e = $('err'); e.style.display = 'block'; e.textContent = '数据获取失败：' + msg; $('dot').style.background = '#ff8f8f'; }
+function chart(hist){
+  if(!hist || hist.length < 2){ $('chart').innerHTML = '<div class="sub">等待数据…</div>'; return; }
+  const W = 900, H = 120, P = 6;
+  const maxP = Math.max(...hist.map(r => r.population), 1);
+  const maxM = Math.max(...hist.map(r => r.meanMutRate || 0), 0.001);
+  const xs = (i) => P + i * (W - 2 * P) / (hist.length - 1);
+  const line = (key, max, color, dash) => {
+    const pts = hist.map((r, i) => xs(i).toFixed(1) + ',' + (H - P - (r[key] || 0) / max * (H - 2 * P)).toFixed(1)).join(' ');
+    return '<polyline fill="none" stroke="' + color + '" stroke-width="1.6" ' + (dash ? 'stroke-dasharray="4 3"' : '') + ' points="' + pts + '"/>';
+  };
+  $('chart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
+    line('population', maxP, '#7ee08a', false) + line('meanMutRate', maxM, '#8be9fd', true) + '</svg>';
+  $('chart-legend').innerHTML = '<span class="ok">—</span> 种群数量（峰值 ' + maxP + '）　<span style="color:#8be9fd">- -</span> 平均突变率（峰值 ' + maxM.toFixed(3) + '）　tick ' + hist[0].tick + ' → ' + hist[hist.length - 1].tick;
+}
+async function tick(){
+  try{
+    const r = await fetch('/api/bio/public', { cache: 'no-store' }); if(!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    $('err').style.display = 'none'; $('dot').style.background = '#7ee08a';
+    $('name').textContent = d.name || 'Arc Biosphere';
+    $('tick').textContent = d.tick; $('alive').textContent = d.alive; $('gen').textContent = d.generations;
+    $('updated').textContent = '更新于 ' + new Date().toLocaleTimeString();
+    const c = d.chain || {};
+    if(!c.configured){
+      $('c-live').innerHTML = '<span class="warn">未配置</span>';
+      $('c-links').textContent = '设 PP_REGISTRY=0x… 后显示链上承诺';
+    } else {
+      $('c-live').innerHTML = c.isLive ? '<span class="ok">LIVE ✓</span>' : '<span class="bad">STALE</span>';
+      $('c-count').textContent = c.commitCount;
+      $('c-ago').textContent = c.secondsSinceLastCommit == null ? '—' : c.secondsSinceLastCommit + ' s';
+      $('c-ratio').textContent = c.realRevenueRatioBps == null ? '—' : (c.realRevenueRatioBps / 100).toFixed(2) + '%';
+      const m = c.latest && c.latest.populationRoot === d.populationRoot;
+      $('c-match').innerHTML = !c.latest ? '<span class="warn">尚无提交</span>' : (m ? '<span class="ok">逐字节一致 ✓</span>' : '<span class="warn">不同 tick（链上为上次快照）</span>');
+      $('c-root').textContent = c.latest ? c.latest.populationRoot.slice(0, 30) + '…' : '—';
+      $('l-root').textContent = (d.populationRoot || '').slice(0, 30) + '…';
+      $('c-links').innerHTML = 'registry <code>' + c.registry.slice(0, 12) + '…</code> · <a href="' + c.explorer + '">explorer</a>';
+    }
+    const h = d.honesty || {};
+    $('h-real').textContent = '$' + fmt(h.realRevenueUSDC, 4);
+    $('h-sub').textContent = '$' + fmt(h.subsidyUSDC, 4);
+    $('h-ratio').textContent = ((h.realRevenueRatioBps || 0) / 100).toFixed(2) + '%';
+    $('h-ratio-bar').style.width = ((h.realRevenueRatioBps || 0) / 100) + '%';
+    $('h-sim').textContent = ((h.simulatedDemandShareBps || 0) / 100).toFixed(2) + '%';
+    $('h-sim-bar').style.width = ((h.simulatedDemandShareBps || 0) / 100) + '%';
+    $('h-sim').className = (h.simulatedDemandShareBps || 0) > 5000 ? 'bad' : 'ok';
+    chart(d.history);
+    $('niches').innerHTML = Object.entries(d.niches || {}).map(([k, v]) =>
+      '<tr><td>' + k + '</td><td>' + v.population + '</td><td>' + fmt(v.demand, 1) + '</td><td>' + fmt(v.priceIndex, 3) + '</td><td>' + (v.shock && v.shock !== 1 ? '<span class="' + (v.shock > 1 ? 'ok' : 'bad') + '">' + fmt(v.shock, 2) + 'x</span>' : '1.00x') + '</td></tr>').join('');
+    $('replay').textContent = (d.recorder && d.recorder.replay) || 'node tools/replay.js --to-tick ' + d.tick;
+    $('inputs').textContent = d.recorder ? d.recorder.inputsLogged : '—';
+    $('contracts').innerHTML = '合约：registry <code>' + (d.contracts.registry || '未部署') + '</code> · subsidyPool <code>' + (d.contracts.subsidyPool || '未部署') + '</code> · USDC <code>' + d.contracts.usdc + '</code> · 网络 <code>' + (d.network && d.network.caip2) + '</code> · facilitator <code>' + (d.network && d.network.facilitator) + '</code>';
+    const p = await fetch('/api/bio/prices', { cache: 'no-store' });
+    if(p.ok){ const pj = await p.json(); $('prices').innerHTML = (pj.routes || []).map(x => '<tr><td><code>' + x.route + '</code></td><td>' + x.priceUSD + '</td><td class="mut">' + x.model + '</td></tr>').join(''); }
+  }catch(e){ err(e.message); }
+}
+tick(); setInterval(tick, 5000);
+</script>
+</body>
+</html>

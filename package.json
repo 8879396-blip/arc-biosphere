@@ -1,0 +1,41 @@
+{
+  "name": "pandemic-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Autonomous artificial-life economy on Arc: organisms hold USDC, pay upkeep to stay alive, and earn revenue by competing for x402 customers. No fitness function - fitness is solvency.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "agent": "node client/agent.js",
+    "test": "node test-keccak.js && node test-scenarios.js",
+    "gateway:testnet": "node src/life-server.js   # set PP_FACILITATOR=gateway PP_NETWORK=arcTestnet",
+    "gateway:mainnet": "node src/life-server.js   # set PP_FACILITATOR=gateway PP_NETWORK=arc",
+    "life": "node src/life-server.js",
+    "life:auto": "node -e \"process.env.PP_AUTOTICK_MS=process.env.PP_AUTOTICK_MS||1500;import(\\\"./src/life-server.js\\\")\"",
+    "watch": "node client/watch.js",
+    "steer": "node client/steer.js",
+    "evolve": "node tools/evolve.js 3000",
+    "compile": "solc --optimize --optimize-runs 200 --bin --abi --overwrite -o build contracts/BiosphereRegistry.sol contracts/SubsidyPool.sol",
+    "deploy:dry": "node tools/deploy-contracts.js --dry --net mainnet",
+    "deploy": "node tools/deploy-contracts.js --net mainnet",
+    "commit": "node tools/commit-state.js --net mainnet --every 300",
+    "verify": "node tools/verify.js --net mainnet",
+    "selftest": "node -e \"import('./tools/arc.js').then(m=>{let ok=true;for(const[n,p,v]of m.selfTest()){console.log(p?'PASS':'FAIL',n,String(v).slice(0,60));if(!p)ok=false}process.exit(ok?0:1)})\"",
+    "replay": "node tools/replay.js --to-tick 1000",
+    "digest": "node tools/x-digest.js --kind data",
+    "serve": "node src/life-server.js",
+    "serve:auto": "node -e \"process.env.PP_AUTOTICK_MS=process.env.PP_AUTOTICK_MS||'1500';import('./src/life-server.js')\"",
+    "test:e2e": "node test-honesty.mjs && node test-record.mjs && node test-server.mjs"
+  },
+  "optionalDependencies": {
+    "@circle-fin/x402-batching": "^3.5.0",
+    "@x402/core": "^2.6.0",
+    "@x402/evm": "^2.6.0",
+    "viem": "^2.47.1"
+  }
+}

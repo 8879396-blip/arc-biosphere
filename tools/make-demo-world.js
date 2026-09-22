@@ -1,0 +1,16 @@
+import { createWorld, registerStrain, tick, emptyGenome } from '../src/sim.js';
+import { promises as fs } from 'node:fs';
+const g = emptyGenome();
+g.transmission.air1 = 1; g.transmission.water1 = 1; g.transmission.insect1 = 1; g.transmission.air2 = 1;
+g.symptoms.coughing = 1; g.symptoms.sneezing = 1;
+g.abilities.coldResist1 = 1; g.abilities.heatResist1 = 1; g.abilities.drugResist1 = 1; g.abilities.hardening1 = 1;
+const w = createWorld({ name: 'DEMO — peak day', seed: '0x' + 'e7'.repeat(32) });
+const sid = registerStrain(w, { owner: '0xDEMO', name: 'CRIMSON-9', genome: g, countryId: 1 });
+g.symptoms.pneumonia = 1; g.symptoms.haemorrhage = 1;
+w.strains[sid].genome = g;
+for (let i = 0; i < 17; i++) tick(w, 10);
+const s = w.countries.reduce((a, c) => { for (const k of Object.values(c.strains)) a += k.D; return a; }, 0);
+console.log('day', w.meta.day, 'dead', s.toFixed(1) + 'M', 'countries', w.countries.filter(c => c.firstInfectedDay !== null).length, 'closed', w.countries.filter(c => c.closedDay !== null).length);
+await fs.mkdir('.data-demo/worlds', { recursive: true });
+await fs.writeFile('.data-demo/worlds/' + w.meta.id + '.json', JSON.stringify(w));
+console.log('demo world saved as', w.meta.id);
