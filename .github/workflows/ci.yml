@@ -12,18 +12,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Syntax check (all ESM sources)
+      - name: Syntax check (node --check on every source file)
         run: |
+          set -e
           fail=0
-          for f in $(find src tools client -name '*.js' | sort); do
-            node --input-type=module -e "await import('file://$PWD/'+'$f')" >/dev/null 2>&1 \
-              || node --check "$f" >/dev/null 2>&1 \
-              || { echo "SYNTAX FAIL $f"; fail=1; }
+          for f in $(find src tools client -name '*.js' | sort) test-*.mjs; do
+            if ! node --check "$f" >/dev/null 2>&1; then echo "SYNTAX FAIL $f"; fail=1; fi
           done
-          exit $fail
+          if [ "$fail" != "0" ]; then exit 1; fi
+          echo "all sources parse"
       - name: keccak-256 test vectors
         run: node test-keccak.js
-      - name: Determinism + on-chain replay proof
+      - name: Determinism + honesty ledger + tamper detection
         run: node test-replay.mjs
       - name: Engine scenarios
         run: node test-scenarios.js
+      - name: Signer self-tests (secp256k1 / RLP / EIP-1559)
+        run: |
+          node -e "import('./tools/arc.js').then(m=>{let ok=true;for(const[n,p,v]of m.selfTest()){console.log(p?'PASS':'FAIL',n,String(v).slice(0,60));if(!p)ok=false}process.exit(ok?0:1)})"
