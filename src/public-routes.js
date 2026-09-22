@@ -18,6 +18,38 @@ async function probe(addr) {
   return { bytes: code ? (code.length - 2) / 2 : 0, usdc: balHex ? Number(BigInt(balHex)) / 1e6 : null };
 }
 
+/** 生态位表：活体 bio.niches（demand / priceIndex / shock）+ snapshot 的统计均值。
+ *  注意 snapshot() 返回的字段名是 niches（不是 byNiche）。 */
+function nicheRows(bio, snap) {
+  const stats = (snap && snap.niches) || {};
+  const out = {};
+  for (const n of bio.niches) {
+    const s = stats[n.key] || {};
+    out[n.key] = {
+      population: s.population ?? 0,
+      demand: +n.demand.toFixed(1),
+      priceIndex: +n.priceIndex.toFixed(6),
+      shock: +n.shock.toFixed(2),
+      shockLeft: n.shockLeft || 0,
+      revenue: +n.revenue.toFixed(4),
+      meanQuality: s.meanQuality ?? 0,
+      meanSpeed: s.meanSpeed ?? 0,
+      meanMutRate: s.meanMutRate ?? 0,
+    };
+  }
+  return out;
+}
+
+/** Map 的迭代顺序 = 插入顺序，直接 slice(0,N) 永远只返回最老的 N 个个体。
+ *  均匀采样才能反映真实种群结构（新生个体也要出现在看板上）。 */
+function sampleOrganisms(bio, max) {
+  const all = [...bio.organisms.values()];
+  if (all.length <= max) return all;
+  const stepf = all.length / max, out = [];
+  for (let i = 0; i < max; i++) out.push(all[Math.floor(i * stepf)]);
+  return out;
+}
+
 export function publicRoutes({ bio, L, cfg, ok, chainSnapshot, REGISTRY, SUBSIDY_POOL }) {
   const dashboardData = async () => {
     const h = L.honesty(bio);
@@ -30,12 +62,14 @@ export function publicRoutes({ bio, L, cfg, ok, chainSnapshot, REGISTRY, SUBSIDY
       born: bio.counters.born, died: bio.counters.died,
       speciations: bio.counters.speciations, extinctions: bio.counters.extinctions,
       populationRoot: L.populationRoot(bio),
-      honesty: h, treasury: bio.treasury, niches: snap.byNiche,
+      honesty: h, treasury: bio.treasury,
+      niches: nicheRows(bio, snap),
       history: bio.history.slice(-360).map(r => ({ tick: r.tick, population: r.population, meanEnergy: r.meanEnergy, meanMutRate: r.meanMutRate, revenue: r.revenue, births: r.births, deaths: r.deaths })),
-      organisms: [...bio.organisms.values()].slice(0, 400).map(o => ({
+      organisms: sampleOrganisms(bio, 400).map(o => ({
         id: o.id, niche: o.genome.niche, e: +o.energy.toFixed(5), g: o.generation,
         q: o.genome.quality, age: o.age,
       })),
+      organismsTotal: bio.organisms.size,
       chain: await chainSnapshot(),
       recorder: { genesis: existsSync(GENESIS), inputsLogged: inputs, inputsFile: 'inputs.jsonl',
                   replay: 'node tools/replay.js --to-tick ' + bio.meta.tick + (REGISTRY ? ' --chain ' + REGISTRY : '') },

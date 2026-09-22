@@ -11,6 +11,7 @@
 // ============================================================================
 import http from 'node:http';
 import { promises as fs } from 'node:fs';
+import zlib from 'node:zlib';
 import path from 'node:path';
 import { configFromEnv, paid, json, PRICES, USDC_ARC, usdToAtomic } from './x402.js';
 import * as L from './life.js';
@@ -406,12 +407,23 @@ function match(method, pathname) {
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://localhost');
   const send = (o) => {
-    res.writeHead(o.status || 200, {
+    const headers = {
       'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*',
       'Access-Control-Expose-Headers': 'PAYMENT-REQUIRED,PAYMENT-RESPONSE,X-Price-USD,X-Price-Model,X-Price-Min-USD',
       ...(o.headers || {}),
-    });
-    res.end(typeof o.body === 'string' ? o.body : JSON.stringify(o.body, null, 2));
+    };
+    let body = typeof o.body === 'string' ? o.body : JSON.stringify(o.body, null, 2);
+    // gzip：看板每 5 秒轮询一次 /api/bio/public，压缩后下行少 ~85%
+    if (body.length > 1024 && /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''))) {
+      const gz = zlib.gzipSync(Buffer.from(body), { level: 6 });
+      if (gz.length < Buffer.byteLength(body)) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+        body = gz;
+      }
+    }
+    res.writeHead(o.status || 200, headers);
+    res.end(body);
   };
   if (req.method === 'OPTIONS') return send({ status: 204, body: '' });
   try {

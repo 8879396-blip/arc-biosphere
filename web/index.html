@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Arc Biosphere &middot; Autonomous Living Economy</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#101010;
@@ -191,12 +188,23 @@ footer a:hover{text-decoration:underline}
 <script>
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => (n == null ? '—' : Number(n).toFixed(d));
+const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));
 function err(msg){ const e = $('err'); e.style.display = 'block'; e.textContent = 'Data fetch failed: ' + msg; $('dot').style.background = 'var(--bad)'; }
 
 const NICHE_COLORS = ['#00d992','#5ec8ff','#c792ff','#ffd479','#ff8f8f','#8be9fd'];
 const NICHE_KEYS = ['keccak','pandemic','render','optimize','oracle','entropy'];
 const bc = $('bio-canvas'), bctx = bc.getContext('2d');
-let orgs = [];
+// 预渲染 6 个发光精灵：每帧创建 400 个 radial gradient 是最大的性能开销，
+// 换成 drawImage 后单帧绘制成本下降一个数量级。
+const SPR = NICHE_COLORS.map(col => {
+  const S = 64, c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(S/2, S/2, 0, S/2, S/2, S/2);
+  gr.addColorStop(0, col + 'cc'); gr.addColorStop(0.3, col + '44'); gr.addColorStop(1, col + '00');
+  g.fillStyle = gr; g.beginPath(); g.arc(S/2, S/2, S/2, 0, Math.PI*2); g.fill();
+  return c;
+});
+let orgs = [], orgTotal = null;
 function hashPos(str){
   let h = 0;
   for(let i=0;i<str.length;i++){ h = ((h<<5)-h+str.charCodeAt(i))|0; }
@@ -246,15 +254,31 @@ function drawField(){
     return { o, x, y };
   });
 
-  for(let i=0;i<pos.length;i++){
-    const a = pos[i];
-    for(let j=i+1;j<pos.length;j++){
-      const b = pos[j];
-      if(a.o.niche !== b.o.niche) continue;
-      const dx=a.x-b.x, dy=a.y-b.y, d=dx*dx+dy*dy;
-      if(d < 140*140){
-        bctx.beginPath(); bctx.moveTo(a.x,a.y); bctx.lineTo(b.x,b.y);
-        bctx.strokeStyle = NICHE_COLORS[a.o.niche]+'1a'; bctx.lineWidth = 1; bctx.stroke();
+  // 空间网格：400 个个体从 ~80,000 次配对检测降到 ~4,000 次
+  const CELL = 140, grid = new Map(), gkey = (cx, cy) => cx + ',' + cy;
+  for(const p of pos){
+    const cx = (p.x / CELL) | 0, cy = (p.y / CELL) | 0;
+    const k = gkey(cx, cy); let arr = grid.get(k); if(!arr) grid.set(k, arr = []); arr.push(p);
+    p._cx = cx; p._cy = cy;
+  }
+  const NEI = [[0,0],[1,0],[-1,1],[0,1],[1,1]];
+  bctx.lineWidth = 1;
+  for(const [k, arr] of grid){
+    const ci = k.indexOf(','), cx = +k.slice(0, ci), cy = +k.slice(ci + 1);
+    for(const [dx, dy] of NEI){
+      const other = grid.get(gkey(cx + dx, cy + dy)); if(!other) continue;
+      const self = (dx === 0 && dy === 0);
+      for(let i = 0; i < arr.length; i++){
+        const a = arr[i];
+        for(let j = self ? i + 1 : 0; j < other.length; j++){
+          const b = other[j];
+          if(a.o.niche !== b.o.niche) continue;
+          const ddx = a.x - b.x, ddy = a.y - b.y;
+          if(ddx*ddx + ddy*ddy < CELL*CELL){
+            bctx.beginPath(); bctx.moveTo(a.x, a.y); bctx.lineTo(b.x, b.y);
+            bctx.strokeStyle = NICHE_COLORS[a.o.niche] + '1a'; bctx.stroke();
+          }
+        }
       }
     }
   }
@@ -277,9 +301,8 @@ function drawField(){
     const isHov = i === hovered;
     const r = (isHov?5:2.5) + Math.min(6, p.o.e*40) + Math.sin(t*2+p.o.g)*0.5;
     const col = NICHE_COLORS[p.o.niche] || '#00d992';
-    const gr = bctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*(isHov?6:4));
-    gr.addColorStop(0, isHov?col:col+'cc'); gr.addColorStop(0.3, col+'44'); gr.addColorStop(1, col+'00');
-    bctx.beginPath(); bctx.arc(p.x,p.y,r*(isHov?6:4),0,Math.PI*2); bctx.fillStyle=gr; bctx.fill();
+    const glow = r * (isHov ? 6 : 4);
+    bctx.drawImage(SPR[p.o.niche] || SPR[0], p.x - glow, p.y - glow, glow * 2, glow * 2);
     bctx.beginPath(); bctx.arc(p.x,p.y,r,0,Math.PI*2); bctx.fillStyle=isHov?'#fff':col; bctx.fill();
     if(isHov){ bctx.beginPath(); bctx.arc(p.x,p.y,r+4,0,Math.PI*2); bctx.strokeStyle=col; bctx.lineWidth=1; bctx.stroke(); }
   });
@@ -288,26 +311,26 @@ function drawField(){
   if(hovered >= 0){
     const p = pos[hovered], o = p.o;
     tip.style.display = 'block';
-    tip.innerHTML = '<b>' + NICHE_KEYS[o.niche] + '</b> &middot; gen ' + o.g + ' &middot; energy ' + o.e.toFixed(4) + ' &middot; age ' + o.age;
+    tip.innerHTML = '<b>' + esc(NICHE_KEYS[o.niche] || ('niche#' + o.niche)) + '</b> &middot; gen ' + o.g + ' &middot; energy ' + o.e.toFixed(4) + ' &middot; age ' + o.age;
     const wrap = bc.parentElement.getBoundingClientRect();
     let tx = mouse.x + 14, ty = mouse.y - 30;
     if(tx + tip.offsetWidth > wrap.width) tx = mouse.x - tip.offsetWidth - 14;
     tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
   } else tip.style.display = 'none';
 
-  $('field-count').textContent = orgs.length + ' alive';
+  $('field-count').textContent = orgTotal != null && orgTotal > orgs.length ? ('showing ' + orgs.length + ' of ' + orgTotal + ' alive') : (orgs.length + ' alive');
 }
 
-bc.addEventListener('mousemove', e => {
+bc.addEventListener('pointermove', e => {
   const r = bc.getBoundingClientRect();
   mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.active = true;
 });
-bc.addEventListener('mouseleave', () => { mouse.active = false; $('bio-tip').style.display = 'none'; });
-bc.addEventListener('click', e => {
+bc.addEventListener('pointerleave', () => { mouse.active = false; $('bio-tip').style.display = 'none'; });
+bc.addEventListener('pointerdown', e => {
   const r = bc.getBoundingClientRect();
   waves.push({ x: e.clientX - r.left, y: e.clientY - r.top, t0: Date.now()/1000 });
 });
-(function fieldLoop(){ drawField(); requestAnimationFrame(fieldLoop); })();
+
 
 $('niche-colors').innerHTML = NICHE_KEYS.map((k,i)=>
   '<span class="nc"><i style="background:'+NICHE_COLORS[i]+';box-shadow:0 0 6px '+NICHE_COLORS[i]+'"></i>'+k+'</span>').join('');
@@ -386,7 +409,7 @@ function drawEvo(){
     ctx.fillStyle = '#00d992'; ctx.fill();
   }
 }
-cv.addEventListener('mousemove', e=>{
+cv.addEventListener('pointermove', e=>{
   if(!evoData) return;
   const r = cv.getBoundingClientRect();
   const mx = e.clientX - r.left;
@@ -404,7 +427,7 @@ cv.addEventListener('mousemove', e=>{
   tip.style.left = tx + 'px'; tip.style.top = '8px';
   drawEvo();
 });
-cv.addEventListener('mouseleave', ()=>{ evoHover=-1; $('evo-tip').style.display='none'; drawEvo(); });
+cv.addEventListener('pointerleave', ()=>{ evoHover=-1; $('evo-tip').style.display='none'; drawEvo(); });
 function chart(hist){
   evoData = hist && hist.length >= 2 ? hist : null;
   if(!evoData){
@@ -415,7 +438,7 @@ function chart(hist){
   $('chart-range').innerHTML = 'tick ' + evoData[0].tick + ' &rarr; ' + evoData[evoData.length-1].tick + ' &middot; peak pop ' + Math.max(...evoData.map(r=>r.population||0));
   drawEvo();
 }
-(function pulseLoop(){ if(evoData) drawEvo(); requestAnimationFrame(pulseLoop); })();
+
 
 async function tick(){
   try{
@@ -428,16 +451,16 @@ async function tick(){
     const c = d.chain || {};
     if(!c.configured){
       $('c-live').innerHTML = '<span class="pill warn">Not configured</span>';
-      $('c-links').textContent = 'Set PP_REGISTRY=0x&hellip; to show on-chain commitment';
+      $('c-links').textContent = 'Set PP_REGISTRY=0x… to show on-chain commitment';
     } else {
       $('c-live').innerHTML = c.isLive ? '<span class="pill live">LIVE</span>' : '<span class="pill bad">STALE</span>';
       $('c-count').textContent = c.commitCount;
-      $('c-ago').textContent = c.secondsSinceLastCommit == null ? '&mdash;' : c.secondsSinceLastCommit + ' s';
-      $('c-ratio').textContent = c.realRevenueRatioBps == null ? '&mdash;' : (c.realRevenueRatioBps / 100).toFixed(2) + '%';
+      $('c-ago').textContent = c.secondsSinceLastCommit == null ? '—' : c.secondsSinceLastCommit + ' s';
+      $('c-ratio').textContent = c.realRevenueRatioBps == null ? '—' : (c.realRevenueRatioBps / 100).toFixed(2) + '%';
       const m = c.latest && c.latest.populationRoot === d.populationRoot;
       $('c-match').innerHTML = !c.latest ? '<span class="pill warn">No commits yet</span>' : (m ? '<span class="pill live">Byte-identical</span>' : '<span class="pill warn">Different tick</span>');
-      $('c-root').textContent = c.latest ? c.latest.populationRoot.slice(0, 30) + '&hellip;' : '&mdash;';
-      $('l-root').textContent = (d.populationRoot || '').slice(0, 30) + '&hellip;';
+      $('c-root').textContent = c.latest ? c.latest.populationRoot.slice(0, 30) + '…' : '—';
+      $('l-root').textContent = (d.populationRoot || '').slice(0, 30) + '…';
       $('c-links').innerHTML = 'registry <code>' + c.registry.slice(0, 12) + '&hellip;</code> &middot; <a href="' + c.explorer + '">explorer &#8599;</a>';
     }
     const h = d.honesty || {};
@@ -447,18 +470,24 @@ async function tick(){
     $('h-ratio-bar').style.width = ((h.realRevenueRatioBps || 0) / 100) + '%';
     $('h-sim').textContent = ((h.simulatedDemandShareBps || 0) / 100).toFixed(2) + '%';
     $('h-sim-bar').style.width = ((h.simulatedDemandShareBps || 0) / 100) + '%';
-    $('h-sim').className = (h.simulatedDemandShareBps || 0) > 5000 ? 'bad' : 'ok';
+    $('h-sim').classList.toggle('bad', (h.simulatedDemandShareBps || 0) > 5000);
+    $('h-sim').classList.toggle('ok', (h.simulatedDemandShareBps || 0) <= 5000);
     chart(d.history);
-    orgs = d.organisms || [];
+    orgs = d.organisms || []; orgTotal = d.organismsTotal == null ? null : d.organismsTotal;
     $('niches').innerHTML = Object.entries(d.niches || {}).map(([k, v]) =>
       '<tr><td class="mono">' + k + '</td><td class="mono">' + v.population + '</td><td class="mono">' + fmt(v.demand, 1) + '</td><td class="mono">' + fmt(v.priceIndex, 3) + '</td><td class="mono">' + (v.shock && v.shock !== 1 ? '<span class="' + (v.shock > 1 ? 'ok' : 'bad') + '">' + fmt(v.shock, 2) + 'x</span>' : '1.00x') + '</td></tr>').join('');
     $('replay').textContent = (d.recorder && d.recorder.replay) || 'node tools/replay.js --to-tick ' + d.tick;
-    $('inputs').textContent = d.recorder ? d.recorder.inputsLogged : '&mdash;';
-    $('contracts').innerHTML = 'Contracts: registry <code>' + (d.contracts.registry || 'not deployed') + '</code> &middot; subsidyPool <code>' + (d.contracts.subsidyPool || 'not deployed') + '</code> &middot; USDC <code>' + d.contracts.usdc + '</code> &middot; network <code>' + (d.network && d.network.caip2) + '</code> &middot; facilitator <code>' + (d.network && d.network.facilitator) + '</code>';
+    $('inputs').textContent = d.recorder ? d.recorder.inputsLogged : '—';
+    $('contracts').innerHTML = 'Contracts: registry <code>' + esc(d.contracts.registry || 'not deployed') + '</code> &middot; subsidyPool <code>' + esc(d.contracts.subsidyPool || 'not deployed') + '</code> &middot; USDC <code>' + esc(d.contracts.usdc) + '</code> &middot; network <code>' + esc(d.network && d.network.caip2) + '</code> &middot; facilitator <code>' + esc(d.network && d.network.facilitator) + '</code>';
     const p = await fetch('/api/bio/prices', { cache: 'no-store' });
-    if(p.ok){ const pj = await p.json(); $('prices').innerHTML = (pj.routes || []).map(x => '<tr><td class="mono">' + x.route + '</td><td class="mono">' + x.priceUSD + '</td><td class="muted">' + x.model + '</td></tr>').join(''); }
+    if(p.ok){ const pj = await p.json(); $('prices').innerHTML = (pj.routes || []).map(x => '<tr><td class="mono">' + esc(x.route) + '</td><td class="mono">' + esc(x.priceUSD) + '</td><td class="muted">' + esc(x.model) + '</td></tr>').join(''); }
   }catch(e){ err(e.message); }
 }
+// 单一动画循环（原来有两个 rAF 循环在同时跑）；系统开了「减少动态效果」就只画一帧
+const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+function frame(){ if(!reduceMotion){ drawField(); if(evoData) drawEvo(); } requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+
 resizeCanvas(); resizeBio();
 tick(); setInterval(tick, 5000);
 window.addEventListener('load', ()=>{ resizeCanvas(); resizeBio(); });
