@@ -32,6 +32,10 @@ export function publicRoutes({ bio, L, cfg, ok, chainSnapshot, REGISTRY, SUBSIDY
       populationRoot: L.populationRoot(bio),
       honesty: h, treasury: bio.treasury, niches: snap.byNiche,
       history: bio.history.slice(-360).map(r => ({ tick: r.tick, population: r.population, meanEnergy: r.meanEnergy, meanMutRate: r.meanMutRate, revenue: r.revenue, births: r.births, deaths: r.deaths })),
+      organisms: [...bio.organisms.values()].slice(0, 400).map(o => ({
+        id: o.id, niche: o.genome.niche, e: +o.energy.toFixed(5), g: o.generation,
+        q: o.genome.quality, age: o.age,
+      })),
       chain: await chainSnapshot(),
       recorder: { genesis: existsSync(GENESIS), inputsLogged: inputs, inputsFile: 'inputs.jsonl',
                   replay: 'node tools/replay.js --to-tick ' + bio.meta.tick + (REGISTRY ? ' --chain ' + REGISTRY : '') },

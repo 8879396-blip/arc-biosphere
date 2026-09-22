@@ -1,146 +1,444 @@
 <!doctype html>
-<html lang="zh">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Arc Biosphere · 自主生命经济体</title>
+<title>Arc Biosphere &middot; Autonomous Living Economy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080b09;--panel:#0d130f;--line:#1e2b20;--fg:#dfe7e0;--mut:#7d8b7d;--ok:#7ee08a;--warn:#ffd479;--bad:#ff8f8f;--acc:#8be9fd}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:22px 22px 60px}
-a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
-header{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:14px}
-h1{font-size:20px;margin:0}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#9fd7a8;margin:0 0 8px}
-.sub{color:var(--mut);font-size:12px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-top:16px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
-.kv{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dotted #18231a}
-.kv:last-child{border:0}.kv b{font-weight:600}
-.big{font-size:26px;line-height:1.1}
-.pill{display:inline-block;padding:1px 9px;border:1px solid #2b3d2c;border-radius:99px;font-size:12px}
-.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.mut{color:var(--mut)}
-.bar{height:8px;background:#131c15;border-radius:99px;overflow:hidden;margin:6px 0 2px}
-.bar>i{display:block;height:100%;background:linear-gradient(90deg,#2f7d4f,#7ee08a)}
-.bar.warnbar>i{background:linear-gradient(90deg,#7d5f2f,#ffd479)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-td,th{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}th{color:#9fd7a8;font-weight:600}
-code{background:#111a13;padding:1px 5px;border-radius:3px;font-size:12.5px}
-pre{background:#0a100c;border:1px solid var(--line);border-radius:6px;padding:10px;overflow:auto;font-size:12.5px}
-.dot{width:8px;height:8px;border-radius:99px;background:var(--ok);display:inline-block;margin-right:6px;animation:p 2s infinite}
-@keyframes p{0%,100%{opacity:1}50%{opacity:.35}}
-footer{margin-top:22px;color:var(--mut);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
-svg{width:100%;height:120px;display:block}
-#err{display:none;background:#2a1414;border:1px solid #5a2b2b;color:#ffb4b4;padding:10px;border-radius:6px;margin-top:12px}
+:root{
+  --canvas:#101010;
+  --canvas-soft:#1a1a1a;
+  --hairline:#3d3a39;
+  --primary:#00d992;
+  --primary-soft:#2fd6a1;
+  --primary-deep:#10b981;
+  --ink:#f2f2f2;
+  --ink-strong:#ffffff;
+  --body:#bdbdbd;
+  --mute:#8b949e;
+  --bad:#ff8f8f;
+  --warn:#ffd479;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{
+  background:var(--canvas);
+  color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:26px;
+  padding:0 0 80px;
+}
+.mono{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-feature-settings:"tnum" 1;}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.eyebrow{font-size:14px;font-weight:600;letter-spacing:2.52px;text-transform:uppercase;color:var(--primary);margin-bottom:12px}
+header{padding:48px 0 32px;border-bottom:1px solid var(--hairline)}
+.brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;color:var(--ink-strong)}
+.dot{width:8px;height:8px;border-radius:99px;background:var(--primary);display:inline-block;animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-size:48px;font-weight:400;line-height:56px;letter-spacing:-0.65px;color:var(--ink-strong);margin:20px 0 12px;max-width:780px}
+.hero .lede{font-size:18px;line-height:28px;color:var(--body);max-width:680px}
+.stat-row{display:flex;flex-wrap:wrap;gap:32px;margin-top:28px}
+.stat .label{font-size:12px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
+.stat .val{font-size:28px;font-weight:600;color:var(--ink-strong);margin-top:2px}
+.updated{margin-top:16px;font-size:12px;color:var(--mute)}
+.pill{display:inline-block;padding:2px 12px;border:1px solid var(--hairline);border-radius:9999px;font-size:13px;font-weight:500;color:var(--ink)}
+.pill.live{color:var(--primary);border-color:rgba(0,217,146,.35)}
+.pill.bad{color:var(--bad);border-color:rgba(255,143,143,.35)}
+.pill.warn{color:var(--warn);border-color:rgba(255,212,121,.35)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:48px}
+.card{background:var(--canvas);border:1px solid var(--hairline);border-radius:8px;padding:24px}
+.card.full{grid-column:1/-1}
+.card h2{font-size:12px;font-weight:600;letter-spacing:2.52px;text-transform:uppercase;color:var(--primary);margin-bottom:16px}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:8px 0;border-bottom:1px solid var(--hairline)}
+.kv:last-child{border-bottom:0}
+.kv .k{font-size:14px;color:var(--mute)}
+.kv .v{font-size:14px;font-weight:600;color:var(--ink);text-align:right}
+.kv .v.mono{font-size:13px}
+.bar{height:6px;background:var(--canvas-soft);border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.bar>i{display:block;height:100%;background:var(--primary);border-radius:99px;transition:width .6s}
+.bar.warnbar>i{background:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mute);padding:8px 12px;border-bottom:1px solid var(--hairline)}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);color:var(--ink)}
+tr:last-child td{border-bottom:0}
+td.mono{font-size:13px}
+code{background:var(--canvas-soft);padding:2px 6px;border-radius:4px;font-family:SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12.5px;color:var(--ink)}
+pre{background:var(--canvas-soft);border:1px solid var(--hairline);border-radius:8px;padding:16px;overflow:auto;font-family:SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:20px;color:var(--ink)}
+.muted{color:var(--mute);font-size:14px}
+.ok{color:var(--primary)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.field-wrap{position:relative;height:320px;border-radius:0;overflow:hidden;background:transparent;border:none;margin:0 -24px}
+#bio-canvas{width:100%;height:100%;display:block;cursor:crosshair}
+.field-count{position:absolute;top:12px;right:24px;font-size:14px;font-weight:600;color:var(--primary);z-index:2;font-family:SFMono-Regular,Menlo,monospace}
+.niche-colors{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
+.niche-colors .nc{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--body)}
+.niche-colors .nc i{width:8px;height:8px;border-radius:99px;display:inline-block}
+.evo-wrap{position:relative;height:220px;margin-top:4px}
+#evo-canvas{width:100%;height:100%;display:block}
+.evo-tooltip{position:absolute;pointer-events:none;display:none;background:var(--canvas-soft);border:1px solid var(--hairline);border-radius:6px;padding:8px 12px;font-size:12px;line-height:18px;color:var(--ink);white-space:nowrap;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.evo-tooltip b{color:var(--primary)}
+.evo-meta{display:flex;align-items:center;gap:20px;margin-top:12px;flex-wrap:wrap}
+.evo-legend{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--body)}
+.evo-legend .lg{width:12px;height:2px;display:inline-block;border-radius:2px}
+.lg-pop{background:var(--primary);box-shadow:0 0 6px var(--primary)}
+.lg-mut{background:var(--mute);background-image:repeating-linear-gradient(90deg,var(--mute) 0 4px,transparent 4px 7px)}
+.lg-birth{background:var(--warn);opacity:.7}
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--hairline);color:var(--mute);font-size:13px;line-height:22px}
+footer a{color:var(--primary-soft);text-decoration:none}
+footer a:hover{text-decoration:underline}
+#err{display:none;background:rgba(255,143,143,.08);border:1px solid rgba(255,143,143,.3);color:var(--bad);padding:12px 16px;border-radius:8px;margin-top:24px;font-size:14px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.hero h1{font-size:32px;line-height:40px}.wrap{padding:0 20px}}
 </style>
 </head>
 <body>
+<div class="wrap">
+
 <header>
-  <div>
-    <h1><span class="dot" id="dot"></span><span id="name">Arc Biosphere</span></h1>
-    <div class="sub">自主进化 · 自主繁衍 · 自主运营的生命经济体 —— fitness is solvency（活着就是适应度）</div>
-  </div>
-  <div class="sub" style="margin-left:auto;text-align:right">
-    <div>tick <b id="tick">—</b> · 存活 <b id="alive">—</b> · 世代 <b id="gen">—</b></div>
-    <div id="updated">加载中…</div>
+  <div class="brand"><span class="dot" id="dot"></span><span id="name">Arc Biosphere</span></div>
+  <div class="hero">
+    <div class="eyebrow">Verifiable Autonomous Economy</div>
+    <h1>No fitness function. Fitness is: are you still alive?</h1>
+    <p class="lede">Every organism holds USDC, pays metabolic cost each tick, and earns by competing for x402 clients inside its niche. Balance hits zero = death. Pricing, lifespan strategy, and mutation rates all emerge.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="label">Tick</div><div class="val mono" id="tick">&mdash;</div></div>
+      <div class="stat"><div class="label">Alive</div><div class="val mono" id="alive">&mdash;</div></div>
+      <div class="stat"><div class="label">Generations</div><div class="val mono" id="gen">&mdash;</div></div>
+    </div>
+    <div class="updated" id="updated">Loading&hellip;</div>
   </div>
 </header>
+
 <div id="err"></div>
 
 <div class="grid">
-  <div class="card">
-    <h2>链上证明 · BiosphereRegistry</h2>
-    <div class="kv"><span class="mut">状态</span><b id="c-live">—</b></div>
-    <div class="kv"><span class="mut">commitCount</span><b id="c-count">—</b></div>
-    <div class="kv"><span class="mut">距上次提交</span><b id="c-ago">—</b></div>
-    <div class="kv"><span class="mut">链上 realRevenueRatio</span><b id="c-ratio">—</b></div>
-    <div class="kv"><span class="mut">root 一致性</span><b id="c-match">—</b></div>
-    <div class="kv"><span class="mut">链上最新 root</span><b id="c-root" style="font-size:11px">—</b></div>
-    <div class="kv"><span class="mut">服务器当前 root</span><b id="l-root" style="font-size:11px">—</b></div>
-    <div class="sub" id="c-links" style="margin-top:8px"></div>
+
+  <div class="card full" style="border:none;padding:24px 0 0;background:transparent">
+    <h2 style="padding:0 24px">Live Population &middot; Organisms</h2>
+    <div class="field-wrap">
+      <canvas id="bio-canvas"></canvas>
+      <span class="field-count" id="field-count">0 alive</span>
+      <div class="evo-tooltip" id="bio-tip"></div>
+    </div>
+    <div class="niche-colors" id="niche-colors" style="padding:0 24px;margin-top:8px"></div>
+    <p class="muted" style="padding:0 24px;margin-top:4px;font-size:12px;opacity:.6">Each dot = one on-chain organism &middot; Color = niche &middot; Size = energy &middot; Move cursor to scatter &middot; Click to pulse</p>
   </div>
 
   <div class="card">
-    <h2>诚实账本 · 钱从哪来</h2>
-    <div class="kv"><span class="mut">真实第三方 x402 收入</span><b class="ok" id="h-real">—</b></div>
-    <div class="kv"><span class="mut">运营方补贴</span><b class="warn" id="h-sub">—</b></div>
-    <div class="kv"><span class="mut">realRevenueRatio</span><b id="h-ratio">—</b></div>
+    <h2>On-chain Proof &middot; BiosphereRegistry</h2>
+    <div class="kv"><span class="k">Status</span><span class="v" id="c-live">&mdash;</span></div>
+    <div class="kv"><span class="k">commitCount</span><span class="v mono" id="c-count">&mdash;</span></div>
+    <div class="kv"><span class="k">Since last commit</span><span class="v mono" id="c-ago">&mdash;</span></div>
+    <div class="kv"><span class="k">realRevenueRatio</span><span class="v mono" id="c-ratio">&mdash;</span></div>
+    <div class="kv"><span class="k">Root match</span><span class="v" id="c-match">&mdash;</span></div>
+    <div class="kv"><span class="k">Latest on-chain root</span><span class="v mono" id="c-root" style="font-size:11px">&mdash;</span></div>
+    <div class="kv"><span class="k">Server current root</span><span class="v mono" id="l-root" style="font-size:11px">&mdash;</span></div>
+    <div class="muted" id="c-links" style="margin-top:12px;font-size:13px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Honest Ledger &middot; Where the money comes from</h2>
+    <div class="kv"><span class="k">Real x402 revenue</span><span class="v mono ok" id="h-real">&mdash;</span></div>
+    <div class="kv"><span class="k">Operator subsidy</span><span class="v mono warn" id="h-sub">&mdash;</span></div>
+    <div class="kv"><span class="k">realRevenueRatio</span><span class="v mono" id="h-ratio">&mdash;</span></div>
     <div class="bar"><i id="h-ratio-bar" style="width:0%"></i></div>
-    <div class="kv"><span class="mut">模拟基线需求占比</span><b id="h-sim">—</b></div>
+    <div class="kv" style="margin-top:8px"><span class="k">Simulated demand share</span><span class="v mono" id="h-sim">&mdash;</span></div>
     <div class="bar warnbar"><i id="h-sim-bar" style="width:0%"></i></div>
-    <div class="sub" style="margin-top:8px">补贴池每日上限 = <code>baseCap × (1 − ratio)²</code>，ratio 到 100% 自动归零；
-    领取必须附带链上最新 <code>populationRoot</code>，过期直接 revert。</div>
+    <p class="muted" style="margin-top:12px;font-size:13px">Daily subsidy cap = <code>baseCap &times; (1 &minus; ratio)&sup2;</code>, auto-zeroes at 100%. Claims must attach the latest on-chain <code>populationRoot</code>.</p>
   </div>
 
-  <div class="card" style="grid-column:1/-1">
-    <h2>种群与演化</h2>
-    <div id="chart"></div>
-    <div class="sub" id="chart-legend">— 种群数量 · — 平均突变率（环境稳定时下降、剧烈波动时上升，是演化出来的，不是写死的）</div>
+  <div class="card full">
+    <h2>Population &amp; Evolution &middot; Live</h2>
+    <div class="evo-wrap">
+      <canvas id="evo-canvas"></canvas>
+      <div class="evo-tooltip" id="evo-tip"></div>
+    </div>
+    <div class="evo-meta">
+      <span class="evo-legend"><i class="lg lg-pop"></i>Population</span>
+      <span class="evo-legend"><i class="lg lg-mut"></i>Mutation rate</span>
+      <span class="evo-legend"><i class="lg lg-birth"></i>Births/tick</span>
+      <span class="muted" id="chart-range" style="margin-left:auto;font-size:12px"></span>
+    </div>
   </div>
 
   <div class="card">
-    <h2>生态位（市场出清结果）</h2>
-    <table><thead><tr><th>niche</th><th>种群</th><th>需求</th><th>价格指数</th><th>冲击</th></tr></thead><tbody id="niches"></tbody></table>
+    <h2>Niches &middot; Market clearing</h2>
+    <table><thead><tr><th>niche</th><th>pop</th><th>demand</th><th>price index</th><th>shock</th></tr></thead><tbody id="niches"></tbody></table>
   </div>
 
   <div class="card">
-    <h2>x402 服务（真实可买）</h2>
-    <table><thead><tr><th>路由</th><th>价格 USDC</th><th>计价</th></tr></thead><tbody id="prices"></tbody></table>
-    <div class="sub" style="margin-top:8px">买入即把 USDC 变成胜出个体的 energy → 你的消费直接改变基因库。</div>
+    <h2>x402 Services &middot; Actually buyable</h2>
+    <table><thead><tr><th>route</th><th>price USDC</th><th>model</th></tr></thead><tbody id="prices"></tbody></table>
+    <p class="muted" style="margin-top:12px;font-size:13px">Buying converts USDC directly into winning organisms' energy &rarr; your spend reshapes the gene pool.</p>
   </div>
 
-  <div class="card" style="grid-column:1/-1">
-    <h2>自己验（确定性重放）</h2>
-    <pre id="replay">node tools/replay.js --to-tick …</pre>
-    <div class="sub">重放出的 <code>populationRoot</code> 与链上承诺逐字节相同 = 运营方没有偷偷改种群。
-    创世参数见 <code>genesis.json</code>，全部外部输入见 <code>inputs.jsonl</code>（已记录 <b id="inputs">—</b> 条）。</div>
+  <div class="card full">
+    <h2>Verify yourself &middot; Deterministic replay</h2>
+    <pre id="replay">node tools/replay.js --to-tick &hellip;</pre>
+    <p class="muted" style="margin-top:12px;font-size:13px">The replayed <code>populationRoot</code> matches the on-chain commitment byte-for-byte = the operator didn't secretly change the population. All external inputs are in <code>inputs.jsonl</code> (<b id="inputs">&mdash;</b> entries logged).</p>
   </div>
+
 </div>
 
 <footer>
-  <div id="contracts"></div>
-  <div>数据源：<code>/api/bio/public</code>（每 5 秒刷新）· 链上 <code>rpc.mainnet.arc.io</code> · 对比页 <a href="/verify">/verify</a> · 机器可读 <a href="/llms-full.txt">/llms-full.txt</a> · <a href="/openapi.yaml">/openapi.yaml</a></div>
+  <div id="contracts" style="margin-bottom:8px"></div>
+  <div>Data <code>/api/bio/public</code> (every 5s) &middot; Chain <code>rpc.mainnet.arc.io</code> &middot; <a href="/verify">/verify</a> &middot; <a href="/llms-full.txt">/llms-full.txt</a> &middot; <a href="/openapi.yaml">/openapi.yaml</a></div>
 </footer>
+
+</div>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => (n == null ? '—' : Number(n).toFixed(d));
-function err(msg){ const e = $('err'); e.style.display = 'block'; e.textContent = '数据获取失败：' + msg; $('dot').style.background = '#ff8f8f'; }
-function chart(hist){
-  if(!hist || hist.length < 2){ $('chart').innerHTML = '<div class="sub">等待数据…</div>'; return; }
-  const W = 900, H = 120, P = 6;
-  const maxP = Math.max(...hist.map(r => r.population), 1);
-  const maxM = Math.max(...hist.map(r => r.meanMutRate || 0), 0.001);
-  const xs = (i) => P + i * (W - 2 * P) / (hist.length - 1);
-  const line = (key, max, color, dash) => {
-    const pts = hist.map((r, i) => xs(i).toFixed(1) + ',' + (H - P - (r[key] || 0) / max * (H - 2 * P)).toFixed(1)).join(' ');
-    return '<polyline fill="none" stroke="' + color + '" stroke-width="1.6" ' + (dash ? 'stroke-dasharray="4 3"' : '') + ' points="' + pts + '"/>';
-  };
-  $('chart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
-    line('population', maxP, '#7ee08a', false) + line('meanMutRate', maxM, '#8be9fd', true) + '</svg>';
-  $('chart-legend').innerHTML = '<span class="ok">—</span> 种群数量（峰值 ' + maxP + '）　<span style="color:#8be9fd">- -</span> 平均突变率（峰值 ' + maxM.toFixed(3) + '）　tick ' + hist[0].tick + ' → ' + hist[hist.length - 1].tick;
+function err(msg){ const e = $('err'); e.style.display = 'block'; e.textContent = 'Data fetch failed: ' + msg; $('dot').style.background = 'var(--bad)'; }
+
+const NICHE_COLORS = ['#00d992','#5ec8ff','#c792ff','#ffd479','#ff8f8f','#8be9fd'];
+const NICHE_KEYS = ['keccak','pandemic','render','optimize','oracle','entropy'];
+const bc = $('bio-canvas'), bctx = bc.getContext('2d');
+let orgs = [];
+function hashPos(str){
+  let h = 0;
+  for(let i=0;i<str.length;i++){ h = ((h<<5)-h+str.charCodeAt(i))|0; }
+  return { x: (Math.abs(h)%1000)/1000, y: (Math.abs(h>>3)%1000)/1000, a: (Math.abs(h>>7)%628)/100 };
 }
+const posCache = {};
+function orgPos(id){
+  if(!posCache[id]){
+    const h = hashPos(String(id));
+    posCache[id] = { bx: h.x, by: h.y, ph: h.a };
+  }
+  return posCache[id];
+}
+function resizeBio(){
+  const r = bc.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  bc.width = r.width*dpr; bc.height = 320*dpr;
+  bctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener('resize', resizeBio);
+
+const mouse = { x:0, y:0, active:false };
+let waves = [];
+
+function drawField(){
+  const W = bc.clientWidth, H = 320;
+  const padX = 0.06, padY = 0.10;
+  bctx.clearRect(0,0,W,H);
+  const t = Date.now()/1000;
+  const px = (u) => (padX + u*(1-2*padX)) * W;
+  const py = (v) => (padY + v*(1-2*padY)) * H;
+
+  const pos = orgs.map(o => {
+    const p = orgPos(o.id);
+    let x = px(p.bx + Math.sin(t*0.3+p.ph)*0.03);
+    let y = py(p.by + Math.cos(t*0.2+p.ph)*0.03);
+    if(mouse.active){
+      const dx = x-mouse.x, dy = y-mouse.y, d2 = dx*dx+dy*dy, R = 80;
+      if(d2 < R*R && d2 > 0.01){ const d = Math.sqrt(d2), f = (1-d/R)*18; x += dx/d*f; y += dy/d*f; }
+    }
+    waves.forEach(w => {
+      const age = (t-w.t0)*1000, R = age*0.25;
+      const dx = x-w.x, dy = y-w.y, d = Math.sqrt(dx*dx+dy*dy);
+      const ring = Math.abs(d-R);
+      if(ring < 25 && age < 600){ const f = (1-ring/25)*(1-age/600)*12; x += dx/(d||1)*f; y += dy/(d||1)*f; }
+    });
+    return { o, x, y };
+  });
+
+  for(let i=0;i<pos.length;i++){
+    const a = pos[i];
+    for(let j=i+1;j<pos.length;j++){
+      const b = pos[j];
+      if(a.o.niche !== b.o.niche) continue;
+      const dx=a.x-b.x, dy=a.y-b.y, d=dx*dx+dy*dy;
+      if(d < 140*140){
+        bctx.beginPath(); bctx.moveTo(a.x,a.y); bctx.lineTo(b.x,b.y);
+        bctx.strokeStyle = NICHE_COLORS[a.o.niche]+'1a'; bctx.lineWidth = 1; bctx.stroke();
+      }
+    }
+  }
+
+  waves = waves.filter(w => (t-w.t0)*1000 < 600);
+  waves.forEach(w => {
+    const age = (t-w.t0)*1000, R = age*0.25;
+    bctx.beginPath(); bctx.arc(w.x,w.y,R,0,Math.PI*2);
+    bctx.strokeStyle = 'rgba(242,242,242,' + (0.3*(1-age/600)) + ')';
+    bctx.lineWidth = 1.5; bctx.stroke();
+  });
+
+  let hovered = -1, hoverDist = 20*20;
+  if(mouse.active) pos.forEach((p,i) => {
+    const dx=p.x-mouse.x, dy=p.y-mouse.y, d2=dx*dx+dy*dy;
+    if(d2 < hoverDist){ hoverDist=d2; hovered=i; }
+  });
+
+  pos.forEach((p,i) => {
+    const isHov = i === hovered;
+    const r = (isHov?5:2.5) + Math.min(6, p.o.e*40) + Math.sin(t*2+p.o.g)*0.5;
+    const col = NICHE_COLORS[p.o.niche] || '#00d992';
+    const gr = bctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*(isHov?6:4));
+    gr.addColorStop(0, isHov?col:col+'cc'); gr.addColorStop(0.3, col+'44'); gr.addColorStop(1, col+'00');
+    bctx.beginPath(); bctx.arc(p.x,p.y,r*(isHov?6:4),0,Math.PI*2); bctx.fillStyle=gr; bctx.fill();
+    bctx.beginPath(); bctx.arc(p.x,p.y,r,0,Math.PI*2); bctx.fillStyle=isHov?'#fff':col; bctx.fill();
+    if(isHov){ bctx.beginPath(); bctx.arc(p.x,p.y,r+4,0,Math.PI*2); bctx.strokeStyle=col; bctx.lineWidth=1; bctx.stroke(); }
+  });
+
+  const tip = $('bio-tip');
+  if(hovered >= 0){
+    const p = pos[hovered], o = p.o;
+    tip.style.display = 'block';
+    tip.innerHTML = '<b>' + NICHE_KEYS[o.niche] + '</b> &middot; gen ' + o.g + ' &middot; energy ' + o.e.toFixed(4) + ' &middot; age ' + o.age;
+    const wrap = bc.parentElement.getBoundingClientRect();
+    let tx = mouse.x + 14, ty = mouse.y - 30;
+    if(tx + tip.offsetWidth > wrap.width) tx = mouse.x - tip.offsetWidth - 14;
+    tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
+  } else tip.style.display = 'none';
+
+  $('field-count').textContent = orgs.length + ' alive';
+}
+
+bc.addEventListener('mousemove', e => {
+  const r = bc.getBoundingClientRect();
+  mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.active = true;
+});
+bc.addEventListener('mouseleave', () => { mouse.active = false; $('bio-tip').style.display = 'none'; });
+bc.addEventListener('click', e => {
+  const r = bc.getBoundingClientRect();
+  waves.push({ x: e.clientX - r.left, y: e.clientY - r.top, t0: Date.now()/1000 });
+});
+(function fieldLoop(){ drawField(); requestAnimationFrame(fieldLoop); })();
+
+$('niche-colors').innerHTML = NICHE_KEYS.map((k,i)=>
+  '<span class="nc"><i style="background:'+NICHE_COLORS[i]+';box-shadow:0 0 6px '+NICHE_COLORS[i]+'"></i>'+k+'</span>').join('');
+
+const cv = $('evo-canvas'), ctx = cv.getContext('2d');
+let evoData = null, evoHover = -1;
+function resizeCanvas(){
+  const r = cv.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = r.width * dpr; cv.height = 220 * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  drawEvo();
+}
+window.addEventListener('resize', resizeCanvas);
+function smoothPath(pts){
+  if(pts.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for(let i=0;i<pts.length-1;i++){
+    const xc = (pts[i].x + pts[i+1].x)/2, yc = (pts[i].y + pts[i+1].y)/2;
+    ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+  }
+  ctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y);
+}
+function drawEvo(){
+  if(!evoData || evoData.length < 2) return;
+  const W = cv.clientWidth, H = 220, P = {l:8,r:12,t:16,b:24};
+  const hist = evoData;
+  const maxP = Math.max(...hist.map(r=>r.population), 1);
+  const maxM = Math.max(...hist.map(r=>r.meanMutRate||0), 0.001);
+  const maxB = Math.max(...hist.map(r=>r.births||0), 0);
+  const xs = i => P.l + i*(W-P.l-P.r)/(hist.length-1);
+  const yP = v => H-P.b - v/maxP*(H-P.t-P.b);
+  const yM = v => H-P.b - v/maxM*(H-P.t-P.b);
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = 'rgba(61,58,57,.5)'; ctx.lineWidth = 1;
+  for(let i=1;i<=3;i++){ const y = P.t + i*(H-P.t-P.b)/4;
+    ctx.beginPath(); ctx.moveTo(P.l,y); ctx.lineTo(W-P.r,y); ctx.stroke(); }
+  if(maxB > 0){
+    ctx.fillStyle = 'rgba(255,212,121,.12)';
+    const bw = Math.max(1, (W-P.l-P.r)/hist.length - 1);
+    hist.forEach((r,i)=>{ const h = (r.births||0)/maxB*(H-P.t-P.b);
+      ctx.fillRect(xs(i)-bw/2, H-P.b-h, bw, h); });
+  }
+  ctx.strokeStyle = '#8b949e'; ctx.lineWidth = 1.2;
+  ctx.setLineDash([4,3]);
+  const mutPts = hist.map((r,i)=>({x:xs(i), y:yM(r.meanMutRate||0)}));
+  smoothPath(mutPts); ctx.stroke();
+  ctx.setLineDash([]);
+  const popPts = hist.map((r,i)=>({x:xs(i), y:yP(r.population||0)}));
+  const grad = ctx.createLinearGradient(0, P.t, 0, H-P.b);
+  grad.addColorStop(0, 'rgba(0,217,146,.25)');
+  grad.addColorStop(1, 'rgba(0,217,146,0)');
+  ctx.beginPath();
+  ctx.moveTo(popPts[0].x, H-P.b);
+  popPts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(popPts[popPts.length-1].x, H-P.b);
+  ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = '#00d992'; ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(0,217,146,.6)'; ctx.shadowBlur = 8;
+  smoothPath(popPts); ctx.stroke();
+  ctx.shadowBlur = 0;
+  const last = popPts[popPts.length-1];
+  const pulse = (Date.now()/400) % (Math.PI*2);
+  const r = 4 + Math.sin(pulse)*1.5;
+  ctx.beginPath(); ctx.arc(last.x, last.y, r, 0, Math.PI*2);
+  ctx.fillStyle = '#00d992'; ctx.fill();
+  ctx.beginPath(); ctx.arc(last.x, last.y, r+6, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(0,217,146,.25)'; ctx.lineWidth = 1; ctx.stroke();
+  if(evoHover >= 0 && evoHover < hist.length){
+    const hx = xs(evoHover);
+    ctx.strokeStyle = 'rgba(242,242,242,.2)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(hx, P.t); ctx.lineTo(hx, H-P.b); ctx.stroke();
+    const d = hist[evoHover];
+    ctx.beginPath(); ctx.arc(hx, yP(d.population||0), 3.5, 0, Math.PI*2);
+    ctx.fillStyle = '#00d992'; ctx.fill();
+  }
+}
+cv.addEventListener('mousemove', e=>{
+  if(!evoData) return;
+  const r = cv.getBoundingClientRect();
+  const mx = e.clientX - r.left;
+  const W = cv.clientWidth;
+  const P = {l:8,r:12};
+  const i = Math.round((mx-P.l)/(W-P.l-P.r)*(evoData.length-1));
+  evoHover = Math.max(0, Math.min(evoData.length-1, i));
+  const d = evoData[evoHover];
+  const tip = $('evo-tip');
+  tip.style.display = 'block';
+  tip.innerHTML = 'tick <b>'+d.tick+'</b> &middot; pop <b>'+(d.population||0)+'</b> &middot; mut <b>'+(d.meanMutRate||0).toFixed(4)+'</b> &middot; births <b>'+(d.births||0)+'</b>';
+  const wrap = cv.parentElement.getBoundingClientRect();
+  let tx = e.clientX - wrap.left + 12;
+  if(tx + tip.offsetWidth > wrap.width) tx = e.clientX - wrap.left - tip.offsetWidth - 12;
+  tip.style.left = tx + 'px'; tip.style.top = '8px';
+  drawEvo();
+});
+cv.addEventListener('mouseleave', ()=>{ evoHover=-1; $('evo-tip').style.display='none'; drawEvo(); });
+function chart(hist){
+  evoData = hist && hist.length >= 2 ? hist : null;
+  if(!evoData){
+    $('chart-range').innerHTML = 'Waiting for data&hellip;';
+    ctx.clearRect(0,0,cv.clientWidth,220);
+    return;
+  }
+  $('chart-range').innerHTML = 'tick ' + evoData[0].tick + ' &rarr; ' + evoData[evoData.length-1].tick + ' &middot; peak pop ' + Math.max(...evoData.map(r=>r.population||0));
+  drawEvo();
+}
+(function pulseLoop(){ if(evoData) drawEvo(); requestAnimationFrame(pulseLoop); })();
+
 async function tick(){
   try{
     const r = await fetch('/api/bio/public', { cache: 'no-store' }); if(!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    $('err').style.display = 'none'; $('dot').style.background = '#7ee08a';
+    $('err').style.display = 'none'; $('dot').style.background = 'var(--primary)';
     $('name').textContent = d.name || 'Arc Biosphere';
     $('tick').textContent = d.tick; $('alive').textContent = d.alive; $('gen').textContent = d.generations;
-    $('updated').textContent = '更新于 ' + new Date().toLocaleTimeString();
+    $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
     const c = d.chain || {};
     if(!c.configured){
-      $('c-live').innerHTML = '<span class="warn">未配置</span>';
-      $('c-links').textContent = '设 PP_REGISTRY=0x… 后显示链上承诺';
+      $('c-live').innerHTML = '<span class="pill warn">Not configured</span>';
+      $('c-links').textContent = 'Set PP_REGISTRY=0x&hellip; to show on-chain commitment';
     } else {
-      $('c-live').innerHTML = c.isLive ? '<span class="ok">LIVE ✓</span>' : '<span class="bad">STALE</span>';
+      $('c-live').innerHTML = c.isLive ? '<span class="pill live">LIVE</span>' : '<span class="pill bad">STALE</span>';
       $('c-count').textContent = c.commitCount;
-      $('c-ago').textContent = c.secondsSinceLastCommit == null ? '—' : c.secondsSinceLastCommit + ' s';
-      $('c-ratio').textContent = c.realRevenueRatioBps == null ? '—' : (c.realRevenueRatioBps / 100).toFixed(2) + '%';
+      $('c-ago').textContent = c.secondsSinceLastCommit == null ? '&mdash;' : c.secondsSinceLastCommit + ' s';
+      $('c-ratio').textContent = c.realRevenueRatioBps == null ? '&mdash;' : (c.realRevenueRatioBps / 100).toFixed(2) + '%';
       const m = c.latest && c.latest.populationRoot === d.populationRoot;
-      $('c-match').innerHTML = !c.latest ? '<span class="warn">尚无提交</span>' : (m ? '<span class="ok">逐字节一致 ✓</span>' : '<span class="warn">不同 tick（链上为上次快照）</span>');
-      $('c-root').textContent = c.latest ? c.latest.populationRoot.slice(0, 30) + '…' : '—';
-      $('l-root').textContent = (d.populationRoot || '').slice(0, 30) + '…';
-      $('c-links').innerHTML = 'registry <code>' + c.registry.slice(0, 12) + '…</code> · <a href="' + c.explorer + '">explorer</a>';
+      $('c-match').innerHTML = !c.latest ? '<span class="pill warn">No commits yet</span>' : (m ? '<span class="pill live">Byte-identical</span>' : '<span class="pill warn">Different tick</span>');
+      $('c-root').textContent = c.latest ? c.latest.populationRoot.slice(0, 30) + '&hellip;' : '&mdash;';
+      $('l-root').textContent = (d.populationRoot || '').slice(0, 30) + '&hellip;';
+      $('c-links').innerHTML = 'registry <code>' + c.registry.slice(0, 12) + '&hellip;</code> &middot; <a href="' + c.explorer + '">explorer &#8599;</a>';
     }
     const h = d.honesty || {};
     $('h-real').textContent = '$' + fmt(h.realRevenueUSDC, 4);
@@ -151,16 +449,19 @@ async function tick(){
     $('h-sim-bar').style.width = ((h.simulatedDemandShareBps || 0) / 100) + '%';
     $('h-sim').className = (h.simulatedDemandShareBps || 0) > 5000 ? 'bad' : 'ok';
     chart(d.history);
+    orgs = d.organisms || [];
     $('niches').innerHTML = Object.entries(d.niches || {}).map(([k, v]) =>
-      '<tr><td>' + k + '</td><td>' + v.population + '</td><td>' + fmt(v.demand, 1) + '</td><td>' + fmt(v.priceIndex, 3) + '</td><td>' + (v.shock && v.shock !== 1 ? '<span class="' + (v.shock > 1 ? 'ok' : 'bad') + '">' + fmt(v.shock, 2) + 'x</span>' : '1.00x') + '</td></tr>').join('');
+      '<tr><td class="mono">' + k + '</td><td class="mono">' + v.population + '</td><td class="mono">' + fmt(v.demand, 1) + '</td><td class="mono">' + fmt(v.priceIndex, 3) + '</td><td class="mono">' + (v.shock && v.shock !== 1 ? '<span class="' + (v.shock > 1 ? 'ok' : 'bad') + '">' + fmt(v.shock, 2) + 'x</span>' : '1.00x') + '</td></tr>').join('');
     $('replay').textContent = (d.recorder && d.recorder.replay) || 'node tools/replay.js --to-tick ' + d.tick;
-    $('inputs').textContent = d.recorder ? d.recorder.inputsLogged : '—';
-    $('contracts').innerHTML = '合约：registry <code>' + (d.contracts.registry || '未部署') + '</code> · subsidyPool <code>' + (d.contracts.subsidyPool || '未部署') + '</code> · USDC <code>' + d.contracts.usdc + '</code> · 网络 <code>' + (d.network && d.network.caip2) + '</code> · facilitator <code>' + (d.network && d.network.facilitator) + '</code>';
+    $('inputs').textContent = d.recorder ? d.recorder.inputsLogged : '&mdash;';
+    $('contracts').innerHTML = 'Contracts: registry <code>' + (d.contracts.registry || 'not deployed') + '</code> &middot; subsidyPool <code>' + (d.contracts.subsidyPool || 'not deployed') + '</code> &middot; USDC <code>' + d.contracts.usdc + '</code> &middot; network <code>' + (d.network && d.network.caip2) + '</code> &middot; facilitator <code>' + (d.network && d.network.facilitator) + '</code>';
     const p = await fetch('/api/bio/prices', { cache: 'no-store' });
-    if(p.ok){ const pj = await p.json(); $('prices').innerHTML = (pj.routes || []).map(x => '<tr><td><code>' + x.route + '</code></td><td>' + x.priceUSD + '</td><td class="mut">' + x.model + '</td></tr>').join(''); }
+    if(p.ok){ const pj = await p.json(); $('prices').innerHTML = (pj.routes || []).map(x => '<tr><td class="mono">' + x.route + '</td><td class="mono">' + x.priceUSD + '</td><td class="muted">' + x.model + '</td></tr>').join(''); }
   }catch(e){ err(e.message); }
 }
+resizeCanvas(); resizeBio();
 tick(); setInterval(tick, 5000);
+window.addEventListener('load', ()=>{ resizeCanvas(); resizeBio(); });
 </script>
 </body>
 </html>
