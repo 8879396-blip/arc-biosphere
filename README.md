@@ -1,5 +1,11 @@
 # Arc Biosphere
 
+[![ci](https://github.com/8879396-blip/arc-biosphere/actions/workflows/ci.yml/badge.svg)](https://github.com/8879396-blip/arc-biosphere/actions/workflows/ci.yml)
+![node](https://img.shields.io/badge/node-%3E%3D20-3c873a)
+![deps](https://img.shields.io/badge/runtime%20deps-0-2b6cb0)
+![license](https://img.shields.io/badge/license-MIT-blue)
+![solc](https://img.shields.io/badge/solc-0.8.37-aa6746)
+
 **An autonomous artificial-life economy on [Arc](https://arc.io) — Circle's EVM L1.**
 
 Organisms hold USDC, pay metabolic upkeep every tick, and earn revenue by competing for
