@@ -61,8 +61,8 @@ contract SubsidyPool {
     /// @notice 由 Safe 把 Argus 的 creator share 转进来（先 approve）
     function donate(uint256 amount) external {
         require(amount > 0, "zero");
-        totalDonated += amount;
         require(usdc.transferFrom(msg.sender, address(this), amount), "transferFrom failed");
+        totalDonated += amount;   // CEI：外部调用之后再改状态
         emit Donated(msg.sender, amount);
     }
 

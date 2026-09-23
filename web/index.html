@@ -232,7 +232,7 @@ const SPR = NICHE_COLORS.map(col => {
   g.fillStyle = gr; g.beginPath(); g.arc(S/2, S/2, S/2, 0, Math.PI*2); g.fill();
   return c;
 });
-let orgs = [], orgTotal = null;
+let orgs = [], orgTotal = null, pricesLoaded = false;
 let prevIds = new Set(), birthAt = new Map(), ghosts = [];
 function hashPos(str){
   let h = 0;
@@ -529,13 +529,17 @@ async function tick(){
     for (const id of prevIds) if (!ids.has(id)) ghosts.push({ id: id, t0: nowMs });
     ghosts = ghosts.filter(g => nowMs - g.t0 < 1400);
     prevIds = ids;
+    for (const [id, t0] of birthAt) if (nowMs - t0 > 5000) birthAt.delete(id);
+    if (Object.keys(posCache).length > 4000) for (const k of Object.keys(posCache)) if (!ids.has(k)) delete posCache[k];
     $('niches').innerHTML = Object.entries(d.niches || {}).map(([k, v]) =>
       '<tr><td class="mono">' + k + '</td><td class="mono">' + v.population + '</td><td class="mono">' + fmt(v.demand, 1) + '</td><td class="mono">' + fmt(v.priceIndex, 3) + '</td><td class="mono">' + (v.shock && v.shock !== 1 ? '<span class="' + (v.shock > 1 ? 'ok' : 'bad') + '">' + fmt(v.shock, 2) + 'x</span>' : '1.00x') + '</td></tr>').join('');
     $('replay').textContent = (d.recorder && d.recorder.replay) || 'node tools/replay.js --to-tick ' + d.tick;
     $('inputs').textContent = d.recorder ? d.recorder.inputsLogged : '—';
     $('contracts').innerHTML = 'Contracts: registry <code>' + esc(d.contracts.registry || 'not deployed') + '</code> &middot; subsidyPool <code>' + esc(d.contracts.subsidyPool || 'not deployed') + '</code> &middot; USDC <code>' + esc(d.contracts.usdc) + '</code> &middot; network <code>' + esc(d.network && d.network.caip2) + '</code> &middot; facilitator <code>' + esc(d.network && d.network.facilitator) + '</code>';
-    const p = await fetch('/api/bio/prices', { cache: 'no-store' });
-    if(p.ok){ const pj = await p.json(); $('prices').innerHTML = (pj.routes || []).map(x => '<tr><td class="mono">' + esc(x.route) + '</td><td class="mono">' + esc(x.priceUSD) + '</td><td class="muted">' + esc(x.model) + '</td></tr>').join(''); }
+    if(!pricesLoaded){
+      const p = await fetch('/api/bio/prices', { cache: 'no-store' });
+      if(p.ok){ const pj = await p.json(); $('prices').innerHTML = (pj.routes || []).map(x => '<tr><td class="mono">' + esc(x.route) + '</td><td class="mono">' + esc(x.priceUSD) + '</td><td class="muted">' + esc(x.model) + '</td></tr>').join(''); pricesLoaded = true; }
+    }
   }catch(e){ err(e.message); }
 }
 // 单一动画循环（原来有两个 rAF 循环在同时跑）；系统开了「减少动态效果」就只画一帧

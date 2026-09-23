@@ -11,6 +11,7 @@ const RIVALS = [
   { name: 'oBrain', claim: '雌性 BANC v888 全脑封进合约（约 16.9 万神经元）', addr: '0x28f986a61e078795639f239675582a12b4cf7f01', chain: 'Arc' },
 ];
 const USDC_ARC_ADDR = '0x3600000000000000000000000000000000000000';
+let _verifyCache = { at: 0, html: null };
 const escAttr = (x) => String(x == null ? '' : x).replace(/["&<>]/g, (m) => ({ '"': '&quot;', '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 
 async function probe(addr) {
@@ -133,7 +134,11 @@ ${row(['<b>' + esc(d.name) + '</b>', '自主进化/繁衍/运营的生命经济�
 
   return {
     'GET /api/bio/public': async () => ok(await dashboardData()),
-    'GET /verify': async () => ({ status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, body: await verifyHtml() }),
+    'GET /verify': async () => {
+      const now = Date.now();
+      if (!_verifyCache.at || now - _verifyCache.at > 60000) _verifyCache = { at: now, html: await verifyHtml() };
+      return { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, body: _verifyCache.html };
+    },
     'GET /og.html': async () => ({ status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, body: ogHtml(await dashboardData()) }),
     'GET /dashboard': async () => {
       try {

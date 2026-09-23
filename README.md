@@ -284,6 +284,11 @@ DESIGN.md    the economic design, including the subsidy analysis
 * Baseline demand is simulated until real x402 customers replace it; the dashboard says so in red.
 * The token is not an investment contract, has no promised yield, and `dividends` can be set to 0.
 * This project is not affiliated with Circle, Arc, Google/Princeton FlyWire, or Eon Systems.
+* `SubsidyPool.draw()` binds money to the **latest committed** root: a caller must pass
+  `registry.latest().populationRoot` read **from chain**, not the local in-memory root, or the
+  draw reverts with `stale root`. No draw path is wired into the server yet, by design.
+* One signing process per key: running two tools with the same `ARC_PK` at the same time will
+  collide on nonces. The commit loop and any manual deploy must not overlap.
 
 ## License
 

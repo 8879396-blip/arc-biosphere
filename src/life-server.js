@@ -413,6 +413,7 @@ const server = http.createServer(async (req, res) => {
       ...(o.headers || {}),
     };
     let body = typeof o.body === 'string' ? o.body : JSON.stringify(o.body, null, 2);
+    if (req.method === 'HEAD') body = '';   // HEAD 不回 body
     // gzip：看板每 5 秒轮询一次 /api/bio/public，压缩后下行少 ~85%
     if (body.length > 1024 && /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''))) {
       const gz = zlib.gzipSync(Buffer.from(body), { level: 6 });
@@ -428,7 +429,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send({ status: 204, body: '' });
   try {
     let raw = ''; for await (const ch of req) raw += ch; req.bodyRaw = raw;
-    const m = match(req.method, u.pathname);
+    const m = match(req.method === 'HEAD' ? 'GET' : req.method, u.pathname);
     if (!m) return send(json({ error: 'not found', path: u.pathname, hint: 'GET /api/bio/meta for routes; GET /api/bio/spec for the model' }, 404));
     send(await m.handler({ req, params: m.params, query: u.searchParams, url: req.url, headers: req.headers }));
   } catch (e) { send(json({ error: e.message, code: e.code || 'INTERNAL' }, e.status || 500)); }
