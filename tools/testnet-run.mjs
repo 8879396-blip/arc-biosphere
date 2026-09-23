@@ -12,6 +12,7 @@ const KEY = path.resolve('.data-live/testnet-operator.key');
 const DEPL = path.resolve('deployments.testnet.json');
 const SERVER = process.env.PP_SERVER || 'http://127.0.0.1:4030';
 const EVERY = Number(process.env.COMMIT_EVERY_SEC || 60);
+const ONCE = process.argv.includes('--once');   // 部署 + 提交一次就退出（验收用）
 const USDC = NETS[NET].usdc;
 
 const pk = process.env.ARC_PK ? BigInt(process.env.ARC_PK) : BigInt(fs.readFileSync(KEY, 'utf8').trim());
@@ -89,6 +90,7 @@ for (;;) {
   } catch (e) {
     console.log('   [warn] ' + e.message.slice(0, 160));
   }
+  if (ONCE) break;
   await new Promise(r => setTimeout(r, EVERY * 1000));
 }
 }

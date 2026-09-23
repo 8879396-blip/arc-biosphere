@@ -175,11 +175,13 @@ export async function buildSend({ net, pk, to, data, value = 0n, gasLimit, maxFe
     const bf = BigInt(blk.baseFeePerGas || 0);
     maxFeePerGas = bf * 2n + maxPriorityFeePerGas;
   }
+  // RPC 参数必须是 hex 字符串：deploy() 传进来的是 Buffer，JSON.stringify 会把它变成 {type:Buffer,...}
+  const dataHex = data == null ? '0x' : (Buffer.isBuffer(data) ? '0x' + data.toString('hex') : String(data));
   if (!gasLimit) {
-    try { gasLimit = BigInt(await rpc(net, 'eth_estimateGas', [{ from: addr, to: to || undefined, data, value: '0x' + value.toString(16) }])) * 12n / 10n; }
+    try { gasLimit = BigInt(await rpc(net, 'eth_estimateGas', [{ from: addr, to: to || undefined, data: dataHex, value: '0x' + value.toString(16) }])) * 12n / 10n; }
     catch (e) { throw new Error('estimateGas failed: ' + e.message); }
   }
-  const fields = [chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to ? to : Buffer.alloc(0), value, data || Buffer.alloc(0), []];
+  const fields = [chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to ? to : Buffer.alloc(0), value, Buffer.from(dataHex.slice(2), 'hex'), []];
   const payload = Buffer.concat([Buffer.from([2]), rlpEnc(fields)]);
   const h = keccak256(payload);
   const { r, s, yParity } = sign(h, pk);
