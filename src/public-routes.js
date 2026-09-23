@@ -3,6 +3,7 @@ import path from 'node:path';
 import { promises as fsp, existsSync } from 'node:fs';
 import { rpc as arcRpc, selector as arcSelector } from '../tools/arc.js';
 import { loadInputs, GENESIS, INPUTS } from './recorder.js';
+import { ogHtml } from './og.js';
 
 // 同赛道项目（推文 @something_labs 2026-09-22 盘点）。这里只放**可链上核查**的事实。
 const RIVALS = [
@@ -10,6 +11,7 @@ const RIVALS = [
   { name: 'oBrain', claim: '雌性 BANC v888 全脑封进合约（约 16.9 万神经元）', addr: '0x28f986a61e078795639f239675582a12b4cf7f01', chain: 'Arc' },
 ];
 const USDC_ARC_ADDR = '0x3600000000000000000000000000000000000000';
+const escAttr = (x) => String(x == null ? '' : x).replace(/["&<>]/g, (m) => ({ '"': '&quot;', '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 
 async function probe(addr) {
   const call = async (to, data) => { try { return await arcRpc('mainnet', 'eth_call', [{ to, data }, 'latest']); } catch { return null; } };
@@ -68,6 +70,7 @@ export function publicRoutes({ bio, L, cfg, ok, chainSnapshot, REGISTRY, SUBSIDY
       organisms: sampleOrganisms(bio, 400).map(o => ({
         id: o.id, niche: o.genome.niche, e: +o.energy.toFixed(5), g: o.generation,
         q: o.genome.quality, age: o.age,
+        p: o.parent || null, lin: (o.lineage || '').split('>')[0] || o.id.slice(0, 6),
       })),
       organismsTotal: bio.organisms.size,
       chain: await chainSnapshot(),
@@ -131,10 +134,20 @@ ${row(['<b>' + esc(d.name) + '</b>', '自主进化/繁衍/运营的生命经济�
   return {
     'GET /api/bio/public': async () => ok(await dashboardData()),
     'GET /verify': async () => ({ status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, body: await verifyHtml() }),
+    'GET /og.html': async () => ({ status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, body: ogHtml(await dashboardData()) }),
     'GET /dashboard': async () => {
       try {
         const file = path.resolve(process.env.PP_WEB_DIR || 'web', 'index.html');
-        const html = await fsp.readFile(file, 'utf8');
+        let html = await fsp.readFile(file, 'utf8');
+        const d = await dashboardData();
+        const pub = String(process.env.PP_PUBLIC_URL || '').replace(/\/$/, '');
+        const hh = d.honesty || {};
+        const desc = 'Autonomous artificial-life economy on Arc. tick ' + d.tick + ' / ' + d.alive + ' alive / gen ' + d.generations +
+          ' / real x402 revenue ' + (hh.realRevenueUSDC || 0) + ' USDC / operator subsidy ' + (hh.subsidyUSDC || 0) +
+          ' USDC / simulated demand share ' + (((hh.simulatedDemandShareBps || 0) / 100).toFixed(1)) + '%. Population root on-chain; deterministic replay.';
+        html = html.split('__OG_URL__').join(pub ? pub + '/dashboard' : '')
+          .split('__OG_IMAGE__').join(pub ? pub + '/og.png' : '')
+          .split('__OG_DESC__').join(escAttr(desc));
         return { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, body: html };
       } catch (e) { return { status: 500, headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: 'dashboard missing: ' + e.message }; }
     },

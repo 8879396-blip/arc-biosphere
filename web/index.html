@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Arc Biosphere &middot; Autonomous Living Economy</title>
+<meta name="description" content="__OG_DESC__">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Arc Biosphere">
+<meta property="og:title" content="Arc Biosphere &mdash; no fitness function, fitness is solvency">
+<meta property="og:description" content="__OG_DESC__">
+<meta property="og:url" content="__OG_URL__">
+<meta property="og:image" content="__OG_IMAGE__">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Arc Biosphere &mdash; verifiable autonomous economy on Arc">
+<meta name="twitter:description" content="__OG_DESC__">
+<meta name="twitter:image" content="__OG_IMAGE__">
 <style>
 :root{
   --canvas:#101010;
@@ -20,6 +33,9 @@
   --warn:#ffd479;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden;max-width:100%}
+.grid>*{min-width:0}
+.card{min-width:0}
 html{-webkit-font-smoothing:antialiased}
 body{
   background:var(--canvas);
@@ -63,16 +79,16 @@ td{padding:10px 12px;border-bottom:1px solid var(--hairline);color:var(--ink)}
 tr:last-child td{border-bottom:0}
 td.mono{font-size:13px}
 code{background:var(--canvas-soft);padding:2px 6px;border-radius:4px;font-family:SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12.5px;color:var(--ink)}
-pre{background:var(--canvas-soft);border:1px solid var(--hairline);border-radius:8px;padding:16px;overflow:auto;font-family:SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:20px;color:var(--ink)}
+pre{background:var(--canvas-soft);border:1px solid var(--hairline);border-radius:8px;padding:16px;overflow:auto;white-space:pre-wrap;word-break:break-word;max-width:100%;font-family:SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:20px;color:var(--ink)}
 .muted{color:var(--mute);font-size:14px}
 .ok{color:var(--primary)}.bad{color:var(--bad)}.warn{color:var(--warn)}
-.field-wrap{position:relative;height:320px;border-radius:0;overflow:hidden;background:transparent;border:none;margin:0 -24px}
+.field-wrap{position:relative;height:clamp(240px,40vh,360px);border-radius:0;overflow:hidden;background:transparent;border:none;margin:0 -24px}
 #bio-canvas{width:100%;height:100%;display:block;cursor:crosshair}
 .field-count{position:absolute;top:12px;right:24px;font-size:14px;font-weight:600;color:var(--primary);z-index:2;font-family:SFMono-Regular,Menlo,monospace}
 .niche-colors{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
 .niche-colors .nc{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--body)}
 .niche-colors .nc i{width:8px;height:8px;border-radius:99px;display:inline-block}
-.evo-wrap{position:relative;height:220px;margin-top:4px}
+.evo-wrap{position:relative;height:clamp(170px,26vh,260px);margin-top:4px}
 #evo-canvas{width:100%;height:100%;display:block}
 .evo-tooltip{position:absolute;pointer-events:none;display:none;background:var(--canvas-soft);border:1px solid var(--hairline);border-radius:6px;padding:8px 12px;font-size:12px;line-height:18px;color:var(--ink);white-space:nowrap;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .evo-tooltip b{color:var(--primary)}
@@ -87,6 +103,12 @@ footer a{color:var(--primary-soft);text-decoration:none}
 footer a:hover{text-decoration:underline}
 #err{display:none;background:rgba(255,143,143,.08);border:1px solid rgba(255,143,143,.3);color:var(--bad);padding:12px 16px;border-radius:8px;margin-top:24px;font-size:14px}
 @media(max-width:860px){.grid{grid-template-columns:1fr}.hero h1{font-size:32px;line-height:40px}.wrap{padding:0 20px}}
+.honesty-strip{display:flex;flex-wrap:wrap;gap:32px;margin-top:24px;padding-top:18px;border-top:1px solid var(--hairline)}
+.honesty-strip .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.honesty-strip .val{font-size:20px;margin-top:2px}
+.ok{color:var(--primary)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:640px){.hero h1{font-size:30px;line-height:36px}.hero .lede{font-size:15px;line-height:23px}.honesty-strip{gap:18px}.row{gap:24px}}
 </style>
 </head>
 <body>
@@ -96,12 +118,18 @@ footer a:hover{text-decoration:underline}
   <div class="brand"><span class="dot" id="dot"></span><span id="name">Arc Biosphere</span></div>
   <div class="hero">
     <div class="eyebrow">Verifiable Autonomous Economy</div>
-    <h1>No fitness function. Fitness is: are you still alive?</h1>
+    <h1>No fitness function.<br>Fitness is solvency.</h1>
     <p class="lede">Every organism holds USDC, pays metabolic cost each tick, and earns by competing for x402 clients inside its niche. Balance hits zero = death. Pricing, lifespan strategy, and mutation rates all emerge.</p>
     <div class="stat-row">
       <div class="stat"><div class="label">Tick</div><div class="val mono" id="tick">&mdash;</div></div>
       <div class="stat"><div class="label">Alive</div><div class="val mono" id="alive">&mdash;</div></div>
       <div class="stat"><div class="label">Generations</div><div class="val mono" id="gen">&mdash;</div></div>
+    </div>
+    <div class="honesty-strip">
+      <div class="hs"><div class="label">Real x402 revenue</div><div class="val mono ok" id="hs-real">&mdash;</div></div>
+      <div class="hs"><div class="label">Operator subsidy</div><div class="val mono warn" id="hs-sub">&mdash;</div></div>
+      <div class="hs"><div class="label">realRevenueRatio</div><div class="val mono" id="hs-ratio">&mdash;</div></div>
+      <div class="hs"><div class="label">Simulated demand</div><div class="val mono" id="hs-sim">&mdash;</div></div>
     </div>
     <div class="updated" id="updated">Loading&hellip;</div>
   </div>
@@ -119,7 +147,7 @@ footer a:hover{text-decoration:underline}
       <div class="evo-tooltip" id="bio-tip"></div>
     </div>
     <div class="niche-colors" id="niche-colors" style="padding:0 24px;margin-top:8px"></div>
-    <p class="muted" style="padding:0 24px;margin-top:4px;font-size:12px;opacity:.6">Each dot = one on-chain organism &middot; Color = niche &middot; Size = energy &middot; Move cursor to scatter &middot; Click to pulse</p>
+    <p class="muted" style="padding:0 24px;margin-top:4px;font-size:12px;opacity:.6">Each dot = one on-chain organism &middot; Color = niche &middot; Size = energy &middot; New organisms fade in at their parent &middot; Red ring = death &middot; Move cursor to scatter &middot; Click to pulse</p>
   </div>
 
   <div class="card">
@@ -205,6 +233,7 @@ const SPR = NICHE_COLORS.map(col => {
   return c;
 });
 let orgs = [], orgTotal = null;
+let prevIds = new Set(), birthAt = new Map(), ghosts = [];
 function hashPos(str){
   let h = 0;
   for(let i=0;i<str.length;i++){ h = ((h<<5)-h+str.charCodeAt(i))|0; }
@@ -221,7 +250,7 @@ function orgPos(id){
 function resizeBio(){
   const r = bc.parentElement.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
-  bc.width = r.width*dpr; bc.height = 320*dpr;
+  bc.width = r.width*dpr; bc.height = bc.clientHeight*dpr;
   bctx.setTransform(dpr,0,0,dpr,0,0);
 }
 window.addEventListener('resize', resizeBio);
@@ -230,7 +259,7 @@ const mouse = { x:0, y:0, active:false };
 let waves = [];
 
 function drawField(){
-  const W = bc.clientWidth, H = 320;
+  const W = bc.clientWidth, H = bc.clientHeight;
   const padX = 0.06, padY = 0.10;
   bctx.clearRect(0,0,W,H);
   const t = Date.now()/1000;
@@ -239,8 +268,12 @@ function drawField(){
 
   const pos = orgs.map(o => {
     const p = orgPos(o.id);
-    let x = px(p.bx + Math.sin(t*0.3+p.ph)*0.03);
-    let y = py(p.by + Math.cos(t*0.2+p.ph)*0.03);
+    const ba = birthAt.has(o.id) ? (Date.now() - birthAt.get(o.id)) : 99999;
+    let bx = p.bx, by = p.by;
+    if (ba < 1200 && o.p) { const pp = orgPos(o.p); const k = ba / 1200; bx = pp.bx + (p.bx - pp.bx) * (0.25 + 0.75 * k); by = pp.by + (p.by - pp.by) * (0.25 + 0.75 * k); }
+    o._alpha = ba < 1200 ? (0.15 + 0.85 * (ba / 1200)) : 1;
+    let x = px(bx + Math.sin(t*0.3+p.ph)*0.03);
+    let y = py(by + Math.cos(t*0.2+p.ph)*0.03);
     if(mouse.active){
       const dx = x-mouse.x, dy = y-mouse.y, d2 = dx*dx+dy*dy, R = 80;
       if(d2 < R*R && d2 > 0.01){ const d = Math.sqrt(d2), f = (1-d/R)*18; x += dx/d*f; y += dy/d*f; }
@@ -272,17 +305,24 @@ function drawField(){
         const a = arr[i];
         for(let j = self ? i + 1 : 0; j < other.length; j++){
           const b = other[j];
-          if(a.o.niche !== b.o.niche) continue;
-          const ddx = a.x - b.x, ddy = a.y - b.y;
-          if(ddx*ddx + ddy*ddy < CELL*CELL){
+          const ddx = a.x - b.x, ddy = a.y - b.y, dd = ddx*ddx + ddy*ddy;
+          if(a.o.niche === b.o.niche && dd < CELL*CELL){
             bctx.beginPath(); bctx.moveTo(a.x, a.y); bctx.lineTo(b.x, b.y);
             bctx.strokeStyle = NICHE_COLORS[a.o.niche] + '1a'; bctx.stroke();
+          } else if(a.o.lin && a.o.lin === b.o.lin && dd < 110*110){
+            bctx.beginPath(); bctx.moveTo(a.x, a.y); bctx.lineTo(b.x, b.y);
+            bctx.strokeStyle = 'rgba(139,148,158,.10)'; bctx.stroke();
           }
         }
       }
     }
   }
 
+  for (const g of ghosts) {
+    const age = (Date.now() - g.t0) / 1400, gp = orgPos(g.id);
+    bctx.beginPath(); bctx.arc(px(gp.bx), py(gp.by), 3 + age * 16, 0, Math.PI * 2);
+    bctx.strokeStyle = 'rgba(255,143,143,' + (0.45 * (1 - age)).toFixed(3) + ')'; bctx.lineWidth = 1.2; bctx.stroke();
+  }
   waves = waves.filter(w => (t-w.t0)*1000 < 600);
   waves.forEach(w => {
     const age = (t-w.t0)*1000, R = age*0.25;
@@ -302,8 +342,10 @@ function drawField(){
     const r = (isHov?5:2.5) + Math.min(6, p.o.e*40) + Math.sin(t*2+p.o.g)*0.5;
     const col = NICHE_COLORS[p.o.niche] || '#00d992';
     const glow = r * (isHov ? 6 : 4);
+    bctx.globalAlpha = p.o._alpha == null ? 1 : p.o._alpha;
     bctx.drawImage(SPR[p.o.niche] || SPR[0], p.x - glow, p.y - glow, glow * 2, glow * 2);
     bctx.beginPath(); bctx.arc(p.x,p.y,r,0,Math.PI*2); bctx.fillStyle=isHov?'#fff':col; bctx.fill();
+    bctx.globalAlpha = 1;
     if(isHov){ bctx.beginPath(); bctx.arc(p.x,p.y,r+4,0,Math.PI*2); bctx.strokeStyle=col; bctx.lineWidth=1; bctx.stroke(); }
   });
 
@@ -340,7 +382,7 @@ let evoData = null, evoHover = -1;
 function resizeCanvas(){
   const r = cv.parentElement.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
-  cv.width = r.width * dpr; cv.height = 220 * dpr;
+  cv.width = r.width * dpr; cv.height = cv.clientHeight * dpr;
   ctx.setTransform(dpr,0,0,dpr,0,0);
   drawEvo();
 }
@@ -357,11 +399,12 @@ function smoothPath(pts){
 }
 function drawEvo(){
   if(!evoData || evoData.length < 2) return;
-  const W = cv.clientWidth, H = 220, P = {l:8,r:12,t:16,b:24};
+  const W = cv.clientWidth, H = cv.clientHeight, P = {l:8,r:12,t:16,b:24};
   const hist = evoData;
   const maxP = Math.max(...hist.map(r=>r.population), 1);
-  const maxM = Math.max(...hist.map(r=>r.meanMutRate||0), 0.001);
-  const maxB = Math.max(...hist.map(r=>r.births||0), 0);
+  const maxM = Math.max(...hist.map(r=>r.meanMutRate||0), 0.001) * 1.15;
+  const bs = hist.map(r=>r.births||0).slice().sort((a,b)=>a-b);
+  const maxB = Math.max(bs[Math.floor(bs.length*0.9)] || 0, 1);
   const xs = i => P.l + i*(W-P.l-P.r)/(hist.length-1);
   const yP = v => H-P.b - v/maxP*(H-P.t-P.b);
   const yM = v => H-P.b - v/maxM*(H-P.t-P.b);
@@ -372,7 +415,7 @@ function drawEvo(){
   if(maxB > 0){
     ctx.fillStyle = 'rgba(255,212,121,.12)';
     const bw = Math.max(1, (W-P.l-P.r)/hist.length - 1);
-    hist.forEach((r,i)=>{ const h = (r.births||0)/maxB*(H-P.t-P.b);
+    hist.forEach((r,i)=>{ const h = (r.births||0)/maxB*(H-P.t-P.b)*0.45;
       ctx.fillRect(xs(i)-bw/2, H-P.b-h, bw, h); });
   }
   ctx.strokeStyle = '#8b949e'; ctx.lineWidth = 1.2;
@@ -432,7 +475,7 @@ function chart(hist){
   evoData = hist && hist.length >= 2 ? hist : null;
   if(!evoData){
     $('chart-range').innerHTML = 'Waiting for data&hellip;';
-    ctx.clearRect(0,0,cv.clientWidth,220);
+    ctx.clearRect(0,0,cv.clientWidth,cv.clientHeight);
     return;
   }
   $('chart-range').innerHTML = 'tick ' + evoData[0].tick + ' &rarr; ' + evoData[evoData.length-1].tick + ' &middot; peak pop ' + Math.max(...evoData.map(r=>r.population||0));
@@ -464,6 +507,13 @@ async function tick(){
       $('c-links').innerHTML = 'registry <code>' + c.registry.slice(0, 12) + '&hellip;</code> &middot; <a href="' + c.explorer + '">explorer &#8599;</a>';
     }
     const h = d.honesty || {};
+    $('hs-real').textContent = '$' + fmt(h.realRevenueUSDC, 4);
+    $('hs-sub').textContent = '$' + fmt(h.subsidyUSDC, 4);
+    $('hs-ratio').textContent = ((h.realRevenueRatioBps || 0) / 100).toFixed(2) + '%';
+    const simPct = (h.simulatedDemandShareBps || 0) / 100;
+    $('hs-sim').textContent = simPct.toFixed(1) + '%';
+    $('hs-sim').classList.toggle('warn', simPct > 50);
+    $('hs-sim').classList.toggle('ok', simPct <= 50);
     $('h-real').textContent = '$' + fmt(h.realRevenueUSDC, 4);
     $('h-sub').textContent = '$' + fmt(h.subsidyUSDC, 4);
     $('h-ratio').textContent = ((h.realRevenueRatioBps || 0) / 100).toFixed(2) + '%';
@@ -474,6 +524,11 @@ async function tick(){
     $('h-sim').classList.toggle('ok', (h.simulatedDemandShareBps || 0) <= 5000);
     chart(d.history);
     orgs = d.organisms || []; orgTotal = d.organismsTotal == null ? null : d.organismsTotal;
+    const ids = new Set(orgs.map(o => o.id)); const nowMs = Date.now();
+    for (const o of orgs) if (!prevIds.has(o.id)) birthAt.set(o.id, nowMs);
+    for (const id of prevIds) if (!ids.has(id)) ghosts.push({ id: id, t0: nowMs });
+    ghosts = ghosts.filter(g => nowMs - g.t0 < 1400);
+    prevIds = ids;
     $('niches').innerHTML = Object.entries(d.niches || {}).map(([k, v]) =>
       '<tr><td class="mono">' + k + '</td><td class="mono">' + v.population + '</td><td class="mono">' + fmt(v.demand, 1) + '</td><td class="mono">' + fmt(v.priceIndex, 3) + '</td><td class="mono">' + (v.shock && v.shock !== 1 ? '<span class="' + (v.shock > 1 ? 'ok' : 'bad') + '">' + fmt(v.shock, 2) + 'x</span>' : '1.00x') + '</td></tr>').join('');
     $('replay').textContent = (d.recorder && d.recorder.replay) || 'node tools/replay.js --to-tick ' + d.tick;

@@ -23,8 +23,11 @@ Nothing here asks you to trust the operator. Three independent checks are built 
 | **The money is real** | `realRevenueRatioBps()` — third-party x402 revenue vs operator subsidy, published on-chain |
 
 Public endpoints: [`/dashboard`](#dashboard) (live panel) · [`/verify`](#verify) (side-by-side
-on-chain comparison, reads the chain at request time) · `/llms.txt` · `/llms-full.txt` ·
-`/openapi.yaml` · `/.well-known/ai.json`
+on-chain comparison, reads the chain at request time) · `/og.html` (1200x630 share card with
+live numbers) · `/llms.txt` · `/llms-full.txt` · `/openapi.yaml` · `/.well-known/ai.json`
+
+Sharing: `/dashboard` carries Open Graph + Twitter card tags; set `PP_PUBLIC_URL` so
+`og:url` / `og:image` resolve, and refresh `web/og.png` with `tools/screenshot.ps1 -Og`.
 
 ---
 
@@ -177,6 +180,8 @@ npm run serve:auto          # http://127.0.0.1:4030
 | `npm run replay -- --to-tick N [--chain 0x…]` | deterministic replay, optional on-chain comparison |
 | `npm run verify` | live comparison table / `/verify` HTML |
 | `npm run digest` | generate the daily post from live numbers |
+| `powershell -File tools\screenshot.ps1 -Og` | headless-Chrome screenshots of `/dashboard`, `/verify` and the 1200x630 share card (`web/og.png`) |
+| `node tools/cdp-shot.mjs --url http://127.0.0.1:4030/dashboard --w 390 --h 844 --dsf 2 --mobile --fold` | device-accurate mobile screenshot via CDP (Chrome's `--window-size` cannot go below ~500px on Windows) |
 | `npm run selftest` | 11 crypto/RLP assertions for the signer |
 | `npm run test:e2e` | honesty ledger + replay + server endpoints |
 
@@ -235,7 +240,9 @@ src/         life.js (engine) · life-server.js (x402 API) · services.js · x40
              public-routes.js (/api/bio/public · /verify · /dashboard) · keccak.js · sim.js
 tools/       arc.js (signer/deployer) · deploy-contracts.js · commit-state.js · replay.js
              verify.js · x-digest.js · evolve.js · snapshot.js
-web/         index.html (the dashboard)
+             screenshot.ps1 (headless Chrome) · cdp-shot.mjs (CDP device emulation)
+web/         index.html (the dashboard) · og.png (live share card, regenerate with screenshot.ps1 -Og)
+src/og.js    server-rendered 1200x630 card behind /og.html
 client/      watch.js · steer.js · agent.js · versus.js
 test-*.mjs   determinism, honesty ledger, keccak vectors, engine scenarios, server endpoints
 docs/        design + execution plan

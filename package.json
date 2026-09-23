@@ -30,7 +30,9 @@
     "digest": "node tools/x-digest.js --kind data",
     "serve": "node src/life-server.js",
     "serve:auto": "node -e \"process.env.PP_AUTOTICK_MS=process.env.PP_AUTOTICK_MS||'1500';import('./src/life-server.js')\"",
-    "test:e2e": "node test-honesty.mjs && node test-record.mjs && node test-server.mjs"
+    "test:e2e": "node test-honesty.mjs && node test-record.mjs && node test-server.mjs",
+    "shot": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/screenshot.ps1 -Og",
+    "shot:mobile": "node tools/cdp-shot.mjs --w 390 --h 844 --dsf 2 --mobile --fold --url http://127.0.0.1:4030/dashboard --out ../shots/mobile-fold.png"
   },
   "optionalDependencies": {
     "@circle-fin/x402-batching": "^3.5.0",
