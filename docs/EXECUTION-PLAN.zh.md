@@ -179,7 +179,7 @@ node tools/replay.js --from .data-bio2/genesis.json --inputs inputs.jsonl --to-t
 | 公开仓库 | `git init && git add -A && git commit && git push`（GitHub 公开） | README 首屏写清：合约地址、`isLive()`、重放命令 |
 | 域名 | 买一个 `.xyz`（≈$2/年）。**别重蹈 MURMUR 的覆辙**：它链上 website/twitter/telegram 三项全空，`murmur.xyz`/`murmurlabs.xyz` 现在是 Afternic 待售停放页 | 域名能打开，且和 Argus 表单里填的一致 |
 
-> Arc Microgrants（10-15 截止）**硬性要求主网部署 + 公开 GitHub**，这一天不做，后面就没有申请资格。
+> Arc Microgrants（10-14 截止）**硬性要求主网部署 + 公开 GitHub**，这一天不做，后面就没有申请资格。
 
 ---
 
@@ -243,7 +243,9 @@ Safe 收到的 creator share
 
 | 通道 | 截止 | 提交什么 |
 |---|---|---|
-| **Global x402 Challenge** | **2026-09-30** | 项目本来就是 x402 服务方：服务清单 + `/x402` 发现端点 + 真实收款记录（`counters.externalRevenue`）+ 公网地址 |
+| ~~Global x402 Challenge~~ | ~~2026-09-30~~ | **不适用**：该赛事要求 x402 收款落在 **Algorand 主网**（$100K + 500K ALGO），我们结算在 Arc，不做跨链改造 |
+| **Arc Microgrants**（DoraHacks） | **2026-10-14 截止** | 20 × 500 USDC；硬要求：Arc 主网部署 + 公开仓库 + 在线部署链接；草稿 `docs/submissions/arc-microgrants.md` |
+| **Circle Developer Grants** | 滚动 | 生产级系统；提交时机 = 承诺循环 ≥7 天 + 第一笔非运营方 x402 收入；草稿 `docs/submissions/circle-developer-grants.md` |
 | **Arc Microgrants** | **2026-10-15 03:59** | 主网合约地址（Registry/SubsidyPool）+ 公开 GitHub + demo 链接 + `populationRoot`/`isLive()` 核查说明 |
 | **Encode Programmable Money Accelerator** | 09-21 已 kickoff，争取下一批 | 同上材料 + 一段 2 分钟录屏（`commit-state` 循环 + `/verify` 实时刷新） |
 
@@ -277,7 +279,7 @@ Safe 收到的 creator share
 - [ ] GitHub 仓库公开，README 首屏有合约地址与核查命令
 - [ ] Creator 钱包是多签（或已部署 `MultiSigWallet.sol`），65/35 规则已公开
 - [ ] Argus Preview 四项复核通过
-- [ ] x402 Challenge（9-30）与 Microgrants（10-15）材料已备好
+- [ ] Microgrants（10-14 截止）与 Circle Grants 材料已备好（`docs/submissions/`）
 
 ---
 

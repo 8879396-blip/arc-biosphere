@@ -127,8 +127,21 @@ function encodeCall(sig, types, values) {
 }
 function encodeCtor(types, values) {
   if (!types || !types.length) return Buffer.alloc(0);
-  // 构造参数只有静态类型时直接拼接（本项目即如此）
-  return Buffer.concat(types.map((t, i) => encArg(t, values[i])));
+  const hasDyn = types.some((t) => t.endsWith('[]'));
+  if (!hasDyn) return Buffer.concat(types.map((t, i) => encArg(t, values[i])));
+  // 含动态类型（如 address[]）：head 放偏移，tail 放内容
+  const head = [], tail = [];
+  let dynOff = types.length * 32;
+  types.forEach((t, i) => {
+    if (t.endsWith('[]')) {
+      const items = values[i] || [];
+      const chunk = Buffer.concat([b(hx(BigInt(items.length), 32)), ...items.map((v) => encArg(t.slice(0, -2), v))]);
+      head.push(b(hx(BigInt(dynOff), 32)));
+      tail.push(chunk);
+      dynOff += chunk.length;
+    } else head.push(encArg(t, values[i]));
+  });
+  return Buffer.concat([...head, ...tail]);
 }
 
 // ── RPC ──────────────────────────────────────────────────────

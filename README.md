@@ -271,7 +271,12 @@ DESIGN.md    the economic design, including the subsidy analysis
 - [ ] commitment loop running 24/7 on a public host (`isLive()` continuously true)
 - [ ] real x402 traffic from third parties → `simulatedDemandShareBps` below 8 500
 - [ ] Argus launch + multisig treasury
-- [ ] [Global x402 Challenge](https://www.x402.org/) (deadline 2026-09-30) and Arc Microgrants (2026-10-15)
+- [ ] [Arc Microgrants](https://dorahacks.io/hackathon/arc-microgrants) (20 x 500 USDC, closes 2026-10-14; draft in `docs/submissions/arc-microgrants.md`)
+- [ ] [Circle Developer Grants](https://circle.com/grant) (rolling; draft in `docs/submissions/circle-developer-grants.md`)
+- [ ] Argus launch + multisig treasury
+
+> Note: the *Global* x402 Challenge (deadline 2026-09-30) requires a paid x402 endpoint on
+> **Algorand** mainnet, so this project is not eligible; our x402 surface settles on Arc.
 
 ## 10. Caveats, stated plainly
 

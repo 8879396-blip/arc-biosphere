@@ -384,7 +384,7 @@ Argus 的机制是达到 milestone 后「毕业」，代币转到 **Uniswap v4**
 
 ## 7. 与黑客松时间线的整合
 
-**Arc Microgrants（DoraHacks）截止 2026-10-15 03:59**，硬性要求「已部署且在 Arc 主网运行」+ GitHub 链接。
+**Arc Microgrants（DoraHacks）截止 2026-10-14**（页面口径；按 10-13 提交留缓冲），硬性要求「已部署且在 Arc 主网运行」+ GitHub 链接。草稿见 `docs/submissions/arc-microgrants.md`。
 
 推荐顺序（**先工程，后发射**）：
 
@@ -393,7 +393,7 @@ Argus 的机制是达到 milestone 后「毕业」，代币转到 **Uniswap v4**
 | W1（→9/29） | S2 `BiosphereRegistry.sol` 上主网 + 验证源码；S5 公开仓库 + 公网部署 | — |
 | W2（→10/6） | S1 `SubsidyPool.sol` 上主网；S3 退坡；S4 输入日志 + replay | **Argus Testnet 演练一次完整发射流程**（若 Argus 支持；不支持则用小额真金在主网演练参数填写） |
 | W3（10/7–10/13） | S5 gateway 模式跑通真实 x402；录 2 分钟 demo | **10/8–10/10 正式发射** |
-| W4（10/14） | 整理提交材料 | **10/14 提交 Arc Microgrants**（留 1 天缓冲，别卡 10/15 03:59） |
+| W4（10/13） | 整理提交材料 | **10/13 提交 Arc Microgrants**（截止 10-14，留 1 天缓冲） |
 
 **为什么先工程后发射**：发射时如果 SubsidyPool 还没上链，你的代币税就只能进 Safe，
 §0 的整个叙事当场破产，而且**无法追溯补救**（发射参数锁死）。
